@@ -7,9 +7,19 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "@tinymce/tinymce-vue": "^4.0.0",
+    "animejs": "^3.2.1",
+    "axios": "^0.21.1",
+    "bootstrap": "^4.6.0",
     "core-js": "^3.6.5",
+    "jquery": "^3.6.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.1",
+    "popper.js": "^1.16.1",
+    "tinymce": "^5.7.0",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0",
+    "vue-upload-component": "^3.0.50",
     "vuex": "^4.0.0-0"
   },
   "devDependencies": {

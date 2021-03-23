@@ -1,0 +1,17 @@
+body {
+  background-color: #dceffe;
+  /* height: 100vh; */
+}
+
+.iconfont {
+  font-size: 32px;
+  cursor: pointer;
+}
+
+.right-angle {
+  border-radius: 0;
+}
+
+.no-border {
+  border: none;
+}
