@@ -23,6 +23,9 @@
           ></span>
           <span class="float-right text-secondary">{{ postContent.time }}</span>
         </div>
+        <div v-if="postImage" class="post-img-container">
+          <img :src="postImage" alt="PostImage" />
+        </div>
       </div>
     </div>
   </div>
@@ -30,7 +33,7 @@
 
 <script>
 import { defineComponent, toRefs, ref } from "vue";
-import request from "@/service";
+import { request, getImg } from "@/service.js";
 import moment from "moment";
 import { useRouter } from "vue-router";
 
@@ -42,9 +45,10 @@ export default defineComponent({
     const { postId } = toRefs(props);
     let postContent = null;
     let isLoading = ref(true);
-    let loadingEnd = ref(true);
+    let postImage = "";
 
     try {
+      let res1;
       let res = await request.get("/selectpostonid", {
         params: { post_id: Number.parseInt(postId.value) },
       });
@@ -53,20 +57,33 @@ export default defineComponent({
       postContent["time"] = moment(res.data.post_time).format(
         "YYYY-MM-DD HH:mm"
       );
-      res = await request.get("/selectuseronid", {
-        params: { u_id: postContent.u_id },
-      });
-      postContent["poster"] = res.data.u_nickname;
+      if (postContent.img_id) {
+        [res, res1] = await Promise.allSettled([
+          request.get("/selectuseronid", {
+            params: { u_id: postContent.u_id },
+          }),
+          getImg(postContent.img_id),
+        ]);
+        console.log(res, res1);
+        postContent["poster"] = res.value.data.u_nickname;
+        if (res1.value && res1.value.data) {
+          postImage = window.URL.createObjectURL(res1.value.data);
+        }
+      } else {
+        res = await request.get("/selectuseronid", {
+          params: { u_id: postContent.u_id },
+        });
+        postContent["poster"] = res.data.u_nickname;
+      }
     } catch (error) {
       console.log(error);
-      loadingEnd.value = false;
     }
 
     return {
       router,
       postContent,
       isLoading,
-      loadingEnd,
+      postImage,
     };
   },
 });
@@ -86,5 +103,9 @@ export default defineComponent({
 }
 .text-small {
   font-size: 13px;
+}
+.post-img-container img {
+  margin-top: 10px;
+  height: 100px;
 }
 </style>

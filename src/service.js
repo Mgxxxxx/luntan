@@ -2,8 +2,9 @@ import axios from 'axios';
 // import http from 'http';
 // import https from 'https';
 
-const service = axios.create({
+const request = axios.create({
     baseURL: 'http://47.119.115.208:15656',
+    // baseURL: 'http://192.168.2.212:15656',
     headers: {
         // "Content-Type": "application/json; charset=utf-8"
     },
@@ -19,7 +20,7 @@ const service = axios.create({
     // }),
 })
 
-service.interceptors.request.use(config => {
+request.interceptors.request.use(config => {
     // console.log(config);
     return config;
 }, err => {
@@ -27,7 +28,7 @@ service.interceptors.request.use(config => {
 })
 
 const get = (url, data) => {
-    return service({
+    return request({
         methods: 'get',
         url,
         params: data
@@ -35,21 +36,21 @@ const get = (url, data) => {
 };
 const post = (url, data) => {
     console.log(url, data);
-    return service({
+    return request({
         methods: 'post',
         url,
         data
     })
 };
 const _delete = (url, data) => {
-    return service({
+    return request({
         methods: 'delete',
         url,
         ...data
     })
 };
 const put = (url, data) => {
-    return service({
+    return request({
         methods: 'put',
         url,
         data
@@ -63,4 +64,28 @@ const put = (url, data) => {
 //     put
 // };
 
-export default service;
+function getImg(img_id) {
+    if (img_id === "") return Promise.resolve("");
+    return request({
+        url: "/getimg",
+        method: "get",
+        params: {
+            img_id
+        },
+        responseType: "blob",
+    })
+}
+
+function uploadImg(data) {
+    return request.post("/uploadimg", data, {
+        headers: {
+            "Content-Type": "multipart/form-data"
+        },
+    })
+}
+
+export {
+    request,
+    getImg,
+    uploadImg
+};

@@ -1,6 +1,7 @@
 import {
   createRouter,
-  createWebHashHistory
+  // createWebHashHistory
+  createWebHistory
 } from 'vue-router'
 import Home from '../views/Home.vue'
 
@@ -16,7 +17,7 @@ const routes = [{
       {
         path: "/detailpost/:id",
         name: 'DetailPost',
-        component: () => import( /* webpackChunkName: "about" */ '../views/DetailPost.vue')
+        component: () => import('../views/DetailPost.vue')
       },
       {
         path: '/profile/:id',
@@ -33,7 +34,7 @@ const routes = [{
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(process.env.BASE_URL),
+  history: createWebHistory(process.env.BASE_URL),
   routes
 })
 

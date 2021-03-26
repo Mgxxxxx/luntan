@@ -24,7 +24,7 @@
 <script>
 import { defineComponent, ref, reactive } from "vue";
 import store from "@/store";
-import request from "@/service";
+import { request, uploadImg } from "@/service.js";
 import CookieUtils from "@/utils/CookieUtils";
 import RichTextEditor from "@/components/RichTextEditor.vue";
 import { inject } from "vue";
@@ -40,7 +40,8 @@ export default defineComponent({
     let content = ref([]);
     let isFocus = ref(false);
 
-    let uid = Number.parseInt(CookieUtils.get("u_id"));
+    // let uid = Number.parseInt(CookieUtils.get("u_id"));
+    let uid = Number.parseInt(localStorage.getItem("u_id"));
 
     const releasePost = () => {
       if (title.value.includes("莫广贤")) {
@@ -51,6 +52,7 @@ export default defineComponent({
         alert("????");
         return;
       }
+      let id;
       request
         .post(
           "/createpost",
@@ -68,7 +70,7 @@ export default defineComponent({
             case 1:
               msg = "发帖成功";
               status = "alert-success";
-              bus.emit("addPost", res.data.post_id);
+              id = res.data.post_id;
               title.value = "";
               // console.log(editor.value.content);
               editor.value.content = "";
@@ -81,14 +83,33 @@ export default defineComponent({
               msg = "发帖失败";
               status = "alert-danger";
           }
-
           store.commit("setAlertMsg", msg);
           store.commit("setAlertStatus", status);
-          bus.emit("alert");
+          if (res.data.state === 1) {
+            if (store.state.postImage) {
+              const data = new FormData();
+              data.append("object", "post");
+              data.append("object_id", Number.parseInt(res.data.post_id));
+              data.append("image", store.state.postImage);
+              return uploadImg(data);
+            }
+          } else {
+            return Promise.reject("发帖失败");
+          }
+          console.log(res);
+        })
+        .then((res) => {
+          console.log(res);
+          store.commit("setPostImage", null);
+          if (res.data.state === 1) {
+            bus.emit("addPost", id);
+            bus.emit("alert");
+          } else return Promise.reject("帖子添加图片失败");
         })
         .catch((err) => {
           console.log(err);
           store.commit("setAlertStatus", "发帖失败");
+          bus.emit("alert");
         });
     };
 

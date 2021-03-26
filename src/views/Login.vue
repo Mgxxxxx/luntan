@@ -60,13 +60,13 @@ import {
   onMounted,
 } from "vue";
 import store from "@/store";
-import request from "@/service";
+import { request } from "@/service";
 import CookieUtils from "@/utils/CookieUtils.js";
 import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "Login",
-  setup() {
+  async setup() {
     const { ctx } = getCurrentInstance();
     const router = useRouter();
     let account = ref(null);
@@ -76,43 +76,54 @@ export default defineComponent({
     const accInput = ref(null);
     const alert = ref(null);
 
-    const login = () => {
+    const login = async () => {
       // console.log(account.value, passwd.value);
-      request
-        .get("/login", {
+      try {
+        let res = await request.get("/login", {
           params: {
             u_name: account.value,
             u_password: passwd.value,
           },
-        })
-        .then((res) => {
-          // console.log(res);
-          switch (res.data.state) {
-            case 0:
-              store.commit("setAlertMsg", "该账号未注册");
-              store.commit("setAlertStatus", "alert-warning");
-              break;
-            case 1:
-              store.commit("setAlertMsg", "登录成功");
-              store.commit("setAlertStatus", "alert-success");
-              CookieUtils.set("u_id", res.data.u_id);
-              CookieUtils.set("u_nickname", res.data.u_nickname);
-              router.push("/");
-              break;
-            case 2:
-              store.commit("setAlertMsg", "帐号或密码错误");
-              store.commit("setAlertStatus", "alert-danger");
-              break;
-            default:
-              store.commit("setAlertMsg", "其他问题");
-              store.commit("setAlertStatus", "alert-danger");
-          }
-        })
-        .catch((err) => {
-          window.alert(err);
         });
-
-      alert.value.alert();
+        // console.log(res);
+        switch (res.data.state) {
+          case 0:
+            store.commit("setAlertMsg", "该账号未注册");
+            store.commit("setAlertStatus", "alert-warning");
+            break;
+          case 1:
+            store.commit("setAlertMsg", "登录成功");
+            store.commit("setAlertStatus", "alert-success");
+            // CookieUtils.set("u_id", res.data.u_id);
+            // CookieUtils.set("u_nickname", res.data.u_nickname);
+            localStorage.setItem("u_id", res.data.u_id);
+            localStorage.setItem("u_nickname", res.data.u_nickname);
+            console.log(localStorage.getItem("u_id"));
+            res = await request.get("/selectuseronid", {
+              // params: { u_id: Number.parseInt(CookieUtils.get("u_id")) },
+              params: { u_id: Number.parseInt(localStorage.getItem("u_id")) },
+            });
+            // CookieUtils.set(
+            //   "img_id",
+            //   res.data.img_id,
+            //   24 * 60 * 60 * 1000,
+            //   "/"
+            // );
+            localStorage.setItem("img_id", res.data.img_id);
+            router.push("/");
+            break;
+          case 2:
+            store.commit("setAlertMsg", "帐号或密码错误");
+            store.commit("setAlertStatus", "alert-danger");
+            break;
+          default:
+            store.commit("setAlertMsg", "其他问题");
+            store.commit("setAlertStatus", "alert-danger");
+        }
+        alert.value.alert();
+      } catch (err) {
+        alert.value.alert();
+      }
     };
     const register = () => {
       request

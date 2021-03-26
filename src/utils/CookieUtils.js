@@ -29,13 +29,13 @@ const CookieUtil = {
     expires.setTime(expires.getTime() + age)
     cookieText += "; expires=" + expires.toGMTString();
     if (path) {
-      cookieText += "' path=" + path;
+      cookieText += "; path=" + path;
     }
     if (domain) {
-      cookieText += "' path=" + domain;
+      cookieText += "; domain=" + domain;
     }
     if (secure) {
-      cookieText += "' secure=" + secure;
+      cookieText += "; secure=" + secure;
     }
     document.cookie = cookieText;
   },

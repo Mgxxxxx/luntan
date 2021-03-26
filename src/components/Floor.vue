@@ -2,7 +2,8 @@
   <div class="clearfix floor">
     <div class="author float-left">
       <div class="poster-img">
-        <img src="@/assets/4.jpg" alt="头像" />
+        <img :src="imgSrc" alt="头像" />
+        <!-- <img src="@/assets/4.jpg" alt="头像" /> -->
       </div>
       <div class="poster">
         <a href="javascript:;">{{ commentContent.poster }}</a>
@@ -11,6 +12,9 @@
     <div class="content float-left text-left">
       <div class="content-body">
         {{ commentContent.comment_txt }}
+        <div v-if="commentImage" class="post-img-container">
+          <img :src="commentImage" alt="CommentImage" />
+        </div>
       </div>
       <div class="content-footer">
         <span class="content-time mr-2">
@@ -22,8 +26,8 @@
   </div>
 </template>
 <script>
-import { defineComponent, ref, toRefs } from "vue";
-import request from "@/service";
+import { defineComponent, onUnmounted, ref, toRefs } from "vue";
+import { request, getImg } from "@/service.js";
 import moment from "moment";
 
 export default defineComponent({
@@ -32,26 +36,48 @@ export default defineComponent({
   async setup(props) {
     const { commentId } = toRefs(props);
     let commentContent = ref(null);
+    let imgSrc = "";
+    let commentImage = "";
+
+    onUnmounted(() => {
+      imgSrc !== "" && window.URL.revokeObjectURL(imgSrc);
+      commentImage !== "" && window.URL.revokeObjectURL(commentImage);
+    });
 
     try {
       let res = await request.get("/selectcommentonid", {
         params: { comment_id: Number.parseInt(commentId.value) },
       });
       commentContent = res.data;
-      // console.log(commentContent);
+      console.log(commentContent);
       commentContent["time"] = moment(res.data.comment_time).format(
         "YYYY-MM-DD HH:mm"
       );
-      res = await request.get("/selectuseronid", {
-        params: { u_id: commentContent.u_id },
-      });
-      commentContent["poster"] = res.data.u_nickname;
+      // res = await request.get("/selectuseronid", {
+      //   params: { u_id: commentContent.u_id },
+      // });
+      let res1;
+      [res, res1] = await Promise.allSettled([
+        request.get("/selectuseronid", {
+          params: { u_id: commentContent.u_id },
+        }),
+        getImg(commentContent.img_id),
+      ]);
+      console.log(res, res1);
+      if (res1.value && res1.value.data) {
+        commentImage = window.URL.createObjectURL(res1.value.data);
+      }
+      commentContent["poster"] = res.value.data.u_nickname;
+      res = await getImg(res.value.data.img_id);
+      imgSrc = window.URL.createObjectURL(res.data);
     } catch (error) {
       console.log(error);
     }
 
     return {
       commentContent,
+      imgSrc,
+      commentImage,
     };
   },
 });
@@ -83,6 +109,10 @@ export default defineComponent({
     min-height: 220px;
     padding: 20px 10px 10px 0;
     position: relative;
+    .post-img-container img {
+      margin-top: 10px;
+      height: 100px;
+    }
     .content-footer {
       position: absolute;
       bottom: 10px;

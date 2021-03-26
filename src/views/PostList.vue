@@ -32,6 +32,7 @@
         <loading />
       </template>
     </Suspense>
+    <picture-area type="post" />
     <release-post ref="releasePost" />
     <static-footer class="mt-5 text-center" />
   </div>
@@ -45,8 +46,9 @@ import ReleasePost from "@/components/ReleasePost.vue";
 import MyPost from "@/components/MyPost.vue";
 import StaticFooter from "@/components/StaticFooter.vue";
 import ScrollToTop from "@/components/ScrollToTop.vue";
+import PictureArea from "@/components/PictureArea.vue";
 
-import request from "@/service.js";
+import { request } from "@/service";
 
 export default {
   name: "Home",
@@ -55,6 +57,7 @@ export default {
     MyPost,
     StaticFooter,
     ScrollToTop,
+    PictureArea,
   },
   async setup() {
     const bus = inject("bus");

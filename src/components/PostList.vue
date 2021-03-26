@@ -1,7 +1,7 @@
 <template>
   <Suspense>
     <template #default>
-      <my-post v-for="id in curPageIds" :key="id" :postId="id" />
+      <my-post v-for="id in curPageIds" :key="'index' + id" :postId="id" />
     </template>
     <template #fallback>
       <loading />
@@ -13,7 +13,7 @@
 import { defineComponent, ref, reactive, inject } from "vue";
 import MyPost from "./MyPost.vue";
 
-import request from "@/service";
+import { request } from "@/service.js";
 
 export default defineComponent({
   name: "PostList",

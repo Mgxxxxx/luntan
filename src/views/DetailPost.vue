@@ -20,7 +20,7 @@
     <div class="clearfix floor">
       <div class="author float-left">
         <div class="poster-img">
-          <img src="@/assets/3.jpg" alt="头像" />
+          <img :src="imgSrc" alt="头像" />
         </div>
         <div class="poster">
           <a href="javascript:;">{{ postContent.poster }}</a>
@@ -29,6 +29,9 @@
       <div class="content float-left text-left">
         <div class="content-body">
           {{ postContent.post_txt }}
+          <div v-if="postImage" class="post-img-container">
+            <img :src="postImage" alt="PostImage" />
+          </div>
         </div>
         <div class="content-footer">
           <span class="content-time mr-2">
@@ -38,8 +41,16 @@
         </div>
       </div>
     </div>
-    <floor v-for="(id, i) in commentIds" :key="id + i" :commentId="id" />
+    <Suspense>
+      <template #default>
+        <floor v-for="(id, i) in commentIds" :key="id + i" :commentId="id" />
+      </template>
+      <template #fallback>
+        <loading />
+      </template>
+    </Suspense>
     <div class="reply-box px-2 py-2 clearfix">
+      <picture-area type="comment" />
       <div class="form-group">
         <textarea
           v-model="replyContent"
@@ -62,20 +73,21 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, ref, inject } from "vue";
+import { defineComponent, onMounted, ref, inject, onUnmounted } from "vue";
 import Floor from "@/components/Floor";
+import PictureArea from "@/components/PictureArea";
 
 import store from "@/store";
 
 import { useRoute } from "vue-router";
 
 import CookieUtils from "@/utils/CookieUtils.js";
-import request from "@/service";
+import { request, getImg, uploadImg } from "@/service";
 import moment from "moment";
 
 export default defineComponent({
   name: "DetailPost",
-  components: { Floor },
+  components: { Floor, PictureArea },
   async setup() {
     const bus = inject("bus");
     const route = useRoute();
@@ -83,12 +95,19 @@ export default defineComponent({
     let replyContent = ref("");
     let isFocus = ref(false);
     let commentIds = ref([]);
+    let imgSrc = "";
+    let postImage = "";
 
     onMounted(() => {
       const height = $(".header")[0].offsetHeight;
       $("#headerWarpper").height(height);
       let navHeight = $(".navbar")[0].offsetHeight;
       document.querySelector("#detail").style.marginTop = navHeight + "px";
+    });
+
+    onUnmounted(() => {
+      window.URL.revokeObjectURL(imgSrc);
+      window.URL.revokeObjectURL(postImage);
     });
 
     try {
@@ -103,13 +122,21 @@ export default defineComponent({
         params: { u_id: postContent.u_id },
       });
       postContent["poster"] = res.data.u_nickname;
-      // console.log(postContent);
-      res = await request.get("/allcommentidonpostid", {
-        params: { post_id: Number.parseInt(route.params.id) },
-      });
-      // console.log(res);
-      if (res.data.commentids !== null) {
-        commentIds.value = res.data.commentids;
+      postContent["user_img_id"] = res.data.img_id;
+      let res1, res2;
+      [res, res1, res2] = await Promise.allSettled([
+        request.get("/allcommentidonpostid", {
+          params: { post_id: Number.parseInt(route.params.id) },
+        }),
+        getImg(postContent.user_img_id),
+        getImg(postContent.img_id),
+      ]);
+      imgSrc = window.URL.createObjectURL(res1.value.data);
+      console.log(res2);
+      postImage = res2.value ? window.URL.createObjectURL(res2.value.data) : "";
+      console.log(res);
+      if (res.value.data.commentids !== null) {
+        commentIds.value = res.value.data.commentids;
       }
     } catch (error) {
       console.log(error);
@@ -126,20 +153,21 @@ export default defineComponent({
         return;
       }
       try {
-        const res = await request.post(
+        let res = await request.post(
           "/createcomment",
           JSON.stringify({
             post_id: Number.parseInt(route.params.id),
-            u_id: Number.parseInt(CookieUtils.get("u_id")),
+            // u_id: Number.parseInt(CookieUtils.get("u_id")),
+            u_id: Number.parseInt(localStorage.getItem("u_id")),
             comment_txt: replyContent.value,
           })
         );
-        let msg, status;
+        let msg, status, commentId;
         switch (res.data.state) {
           case 1:
             msg = "发帖成功";
             status = "alert-success";
-            commentIds.value.push(res.data.comment_id);
+            commentId = res.data.comment_id;
             replyContent.value = "";
             break;
           case 2:
@@ -154,11 +182,27 @@ export default defineComponent({
             msg = "发帖失败";
             status = "alert-danger";
         }
+        if (res.data.state === 1) {
+          if (store.state.commentImage) {
+            console.log("upload commentImage");
+            const data = new FormData();
+            data.append("object", "comment");
+            data.append("object_id", Number.parseInt(commentId));
+            data.append("image", store.state.commentImage);
+            res = await uploadImg(data);
+            if (res.data.state === 1) {
+              commentImage = window.URL.createObjectURL(res.data);
+              store.commit("setCommentImage", null);
+            }
+          }
+        }
+        commentIds.value.push(res.data.commentId);
         store.commit("setAlertMsg", msg);
         store.commit("setAlertStatus", status);
         bus.emit("alert");
       } catch (err) {
         console.log(err);
+        bus.emit("alert");
       }
     };
 
@@ -167,6 +211,8 @@ export default defineComponent({
       postContent,
       commentIds,
       replyContent,
+      imgSrc,
+      postImage,
       toReply,
       releaseReply,
     };
@@ -211,6 +257,10 @@ export default defineComponent({
     min-height: 220px;
     padding: 20px 10px 10px 0;
     position: relative;
+    .post-img-container img {
+      margin-top: 10px;
+      height: 100px;
+    }
     .content-footer {
       position: absolute;
       bottom: 10px;

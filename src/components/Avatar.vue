@@ -1,63 +1,136 @@
 <template>
   <div>
-    <file-upload
-      v-model="file"
-      ref="upload"
-      @input-file="inputFile"
-      :post-action="postUrl"
-      accept="image/png,image/gif,image/jpeg,image/webp"
+    <div>
+      <input
+        type="file"
+        class="file-input"
+        id="validatedInputGroupCustomFile"
+        required
+        accept="image/*"
+        @change="update"
+      />
+      <label for="validatedInputGroupCustomFile">
+        <div class="btn btn-primary">Upload</div>
+      </label>
+    </div>
+    <div
+      v-show="isUpdating"
+      class="position-fixed"
+      style="top: 25%; left: 0; right: 0; z-index: 999"
     >
-      <slot>
-        <button>Browse</button>
-        <input type="file" id="browse" />
-      </slot>
-    </file-upload>
-    <br />
-    <button class="btn btn-primary" @click="submit">Upload</button>
+      <div class="container">
+        <div class="img-container-padding-top"></div>
+        <div class="img-container">
+          <img src="" ref="img" alt="" />
+        </div>
+        <div class="button-container">
+          <slot>
+            <div id="btn" type="button" @click="sureSave(crop)">裁剪</div>
+          </slot>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script>
 import { defineComponent, ref } from "vue";
-import FileUpload from "vue-upload-component";
+import Cropper from "cropperjs";
+import "cropperjs/dist/cropper.css";
 
 export default defineComponent({
   name: "Avatar",
-  components: { FileUpload },
   props: ["postUrl"],
-  setup() {
-    const file = ref([]);
-    const upload = ref(null);
-    const data = ref({});
+  setup(props, ctx) {
+    const img = ref(null);
+    const isUpdating = ref(false);
+    const crop = ref(null);
 
-    const inputFile = (newFile, oldFile) => {
-      if (newFile && !oldFile) {
-        // add
-        console.log("add", newFile);
+    const update = (e) => {
+      // console.log(e.target.files);
+      const file = e.target.files[0];
+      const url = window.URL.createObjectURL(file);
+      img.value.src = url;
+      if (!crop.value) {
+        crop.value = new Cropper(img.value, {
+          viewMode: 1,
+          dragMode: "none",
+          initialAspectRatio: 1,
+          aspectRatio: 1,
+          background: false,
+          autoCropArea: 0.6,
+          zoomOnWheel: false,
+        });
+      } else {
+        // console.log("replace");
+        crop.value.replace(url);
       }
-      if (newFile && oldFile) {
-        // update
-        console.log("update", newFile);
-      }
-      if (!newFile && oldFile) {
-        // remove
-        console.log("remove", oldFile);
-      }
+      isUpdating.value = true;
+      e.target.value = "";
     };
 
-    const submit = () => {
-      upload.value.active = true;
+    const sureSave = (crop) => {
+      // console.log("save");
+      isUpdating.value = false;
+      const canvas = crop.getCroppedCanvas({
+        imageSmoothingQuality: "high",
+      });
+      const afterImg = canvas.toDataURL("image/jpeg");
+      canvas.toBlob(
+        (blob) => {
+          ctx.emit("upload", blob, afterImg);
+        },
+        "image/jpeg",
+        1
+      );
     };
 
     return {
-      file,
-      upload,
-      data,
-      inputFile,
-      submit,
+      img,
+      isUpdating,
+      crop,
+      sureSave,
+      update,
     };
   },
 });
 </script>
 
 <style scoped lang="scss">
+.file-input {
+  width: 0;
+  height: 0;
+}
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.img-container-padding-top {
+  height: 20px;
+  background-color: #000;
+  opacity: 0.5;
+}
+.img-container {
+  height: 400px;
+  overflow: hidden;
+}
+.button-container {
+  background-color: #000;
+  opacity: 0.5;
+  padding: 20px 0;
+}
+.button-container #btn {
+  padding: 0.25rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 0.2rem;
+  color: #fff;
+  background-color: #343a40;
+  border-color: #343a40;
+  display: inline-block;
+  font-weight: 400;
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+}
 </style>
