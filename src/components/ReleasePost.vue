@@ -100,8 +100,9 @@ export default defineComponent({
         })
         .then((res) => {
           console.log(res);
-          store.commit("setPostImage", null);
           if (res.data.state === 1) {
+            window.URL.revokeObjectURL(store.state.postImage);
+            store.commit("setPostImage", null);
             bus.emit("addPost", id);
             bus.emit("alert");
           } else return Promise.reject("帖子添加图片失败");

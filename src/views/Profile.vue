@@ -61,7 +61,7 @@
   </div>
 </template>
 <script>
-import { defineComponent, inject, ref, onUnmounted } from "vue";
+import { defineComponent, inject, ref, onBeforeUnmount } from "vue";
 import Avatar from "@/components/Avatar.vue";
 import store from "@/store";
 import { request } from "@/service";
@@ -81,7 +81,7 @@ export default defineComponent({
     const headerImg = ref(null);
     let imgSrc = "";
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
       window.URL.revokeObjectURL(imgSrc);
     });
 
@@ -162,7 +162,7 @@ export default defineComponent({
     ]);
     console.log(res1, res2);
     if (res2?.value?.data === undefined) {
-      console.log("获取用户头像失败");
+      console.warn("获取用户头像失败");
       imgSrc = "";
     } else {
       imgSrc = window.URL.createObjectURL(res2.value.data);

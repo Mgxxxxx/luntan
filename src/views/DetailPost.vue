@@ -43,14 +43,16 @@
     </div>
     <Suspense>
       <template #default>
-        <floor v-for="(id, i) in commentIds" :key="id + i" :commentId="id" />
+        <div>
+          <floor v-for="(id, i) in commentIds" :key="id + i" :commentId="id" />
+        </div>
       </template>
       <template #fallback>
         <loading />
       </template>
     </Suspense>
     <div class="reply-box px-2 py-2 clearfix">
-      <picture-area type="comment" />
+      <picture-area type="comment" ref="pictureArea" />
       <div class="form-group">
         <textarea
           v-model="replyContent"
@@ -73,7 +75,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, ref, inject, onUnmounted } from "vue";
+import { defineComponent, onMounted, ref, inject, onBeforeUnmount } from "vue";
 import Floor from "@/components/Floor";
 import PictureArea from "@/components/PictureArea";
 
@@ -94,6 +96,7 @@ export default defineComponent({
     let replyContent = ref("");
     let isFocus = ref(false);
     let commentIds = ref([]);
+    const pictureArea = ref(null);
     let imgSrc = "";
     let postImage = "";
 
@@ -104,7 +107,8 @@ export default defineComponent({
       document.querySelector("#detail").style.marginTop = navHeight + "px";
     });
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
+      localStorage.removeItem(postContent.u_id + "headimg");
       window.URL.revokeObjectURL(imgSrc);
       window.URL.revokeObjectURL(postImage);
     });
@@ -128,18 +132,21 @@ export default defineComponent({
           params: { post_id: Number.parseInt(route.params.id) },
         }),
         getImg(postContent.user_img_id),
-        getImg(postContent.img_id),
+        postContent.img_id !== ""
+          ? getImg(postContent.img_id)
+          : Promise.resolve(),
       ]);
       if (res1?.value?.data === undefined) {
         console.warn("获取用户头像失败");
         imgSrc = "";
-      } else {
+      } else if (res1.value?.data) {
         imgSrc = window.URL.createObjectURL(res1.value.data);
+        localStorage.setItem(postContent.u_id + "headimg", imgSrc);
       }
-      if (res2?.value?.data === undefined) {
+      if (postContent.img_id !== "" && res2?.value?.data === undefined) {
         console.warn("获取帖子图片失败");
         postImage = "";
-      } else {
+      } else if (res2.value?.data) {
         postImage = window.URL.createObjectURL(res2.value.data);
       }
       if (res.value.data.commentids !== null) {
@@ -168,21 +175,15 @@ export default defineComponent({
             comment_txt: replyContent.value,
           })
         );
-        let msg, status, commentId;
+        let msg,
+          status,
+          commentId = -1;
         switch (res.data.state) {
           case 1:
             msg = "发帖成功";
             status = "alert-success";
             commentId = res.data.comment_id;
             replyContent.value = "";
-            break;
-          case 2:
-            msg = "发帖人有问题";
-            status = "alert-danger";
-            break;
-          case 3:
-            msg = "帖子id有问题";
-            status = "alert-danger";
             break;
           default:
             msg = "发帖失败";
@@ -197,12 +198,16 @@ export default defineComponent({
             data.append("image", store.state.commentImage);
             res = await uploadImg(data);
             if (res.data.state === 1) {
-              commentImage = window.URL.createObjectURL(res.data);
+              window.URL.revokeObjectURL(store.state.commentImage);
               store.commit("setCommentImage", null);
+              pictureArea.value.imgSrc = "";
+            } else {
+              msg = "发帖失败";
+              status = "alert-danger";
             }
           }
         }
-        commentIds.value.push(res.data.commentId);
+        commentId !== -1 && commentIds.value.push(commentId);
         store.commit("setAlertMsg", msg);
         store.commit("setAlertStatus", status);
         bus.emit("alert");
@@ -219,6 +224,7 @@ export default defineComponent({
       replyContent,
       imgSrc,
       postImage,
+      pictureArea,
       toReply,
       releaseReply,
     };

@@ -26,7 +26,7 @@
   </div>
 </template>
 <script>
-import { defineComponent, onUnmounted, ref, toRefs } from "vue";
+import { defineComponent, onBeforeUnmount, ref, toRefs } from "vue";
 import { request, getImg } from "@/service.js";
 import moment from "moment";
 
@@ -38,10 +38,11 @@ export default defineComponent({
     let commentContent = ref(null);
     let imgSrc = "";
     let commentImage = "";
-
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
       imgSrc !== "" && window.URL.revokeObjectURL(imgSrc);
       commentImage !== "" && window.URL.revokeObjectURL(commentImage);
+      localStorage.removeItem(commentContent.u_id + "headimg");
+      console.log("leave floor");
     });
 
     try {
@@ -52,6 +53,7 @@ export default defineComponent({
       commentContent["time"] = moment(res.data.comment_time).format(
         "YYYY-MM-DD HH:mm"
       );
+      imgSrc = localStorage.getItem(commentContent.u_id + "headimg") ?? "";
       let res1;
       [res, res1] = await Promise.allSettled([
         request.get("/selectuseronid", {
@@ -59,12 +61,18 @@ export default defineComponent({
         }),
         getImg(commentContent.img_id),
       ]);
-      if (res1.value && res1.value.data) {
+      if (res1.value?.data) {
         commentImage = window.URL.createObjectURL(res1.value.data);
       }
-      commentContent["poster"] = res?.value?.data.u_nickname ?? "老色皮";
-      res = await getImg(res.value.data.img_id);
-      imgSrc = res?.value?.data ?? "";
+      commentContent["poster"] = res.value?.data?.u_nickname ?? "老色皮";
+      if (imgSrc === "") {
+        let commenterId = res.value.data.u_id;
+        res = await getImg(res.value.data.img_id);
+        if (res.data) {
+          imgSrc = window.URL.createObjectURL(res.data);
+          localStorage.setItem(commenterId + "headimg", imgSrc);
+        } else imgSrc = "";
+      }
     } catch (error) {
       console.log(error);
     }

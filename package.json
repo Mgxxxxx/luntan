@@ -16,10 +16,8 @@
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
     "popper.js": "^1.16.1",
-    "tinymce": "^5.7.0",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0",
-    "vue-upload-component": "^3.0.50",
     "vuex": "^4.0.0-0"
   },
   "devDependencies": {

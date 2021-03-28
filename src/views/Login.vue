@@ -61,7 +61,6 @@ import {
 } from "vue";
 import store from "@/store";
 import { request } from "@/service";
-import CookieUtils from "@/utils/CookieUtils.js";
 import { useRouter } from "vue-router";
 
 export default defineComponent({

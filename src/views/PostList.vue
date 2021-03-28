@@ -62,7 +62,7 @@
         </li>
       </ul>
     </nav>
-    <picture-area type="post" />
+    <picture-area type="post" ref="pictureArea" />
     <release-post ref="releasePost" />
     <static-footer class="mt-5 text-center" />
   </div>
@@ -100,10 +100,12 @@ export default {
     let curPageIds = ref([]);
     let activePage = ref(0);
     const updating = ref(false);
+    const pictureArea = ref(null);
 
     bus.on("addPost", (id) => {
       updating.value = true;
       curPageIds.value.unshift(id);
+      pictureArea.value.imgSrc = "";
       nextTick(() => (updating.value = false));
       window.scrollTo(0, 0);
       console.log(id);
@@ -146,6 +148,7 @@ export default {
       home,
       isFocus,
       updating,
+      pictureArea,
       releasePost,
       toRelease,
       togglePage,

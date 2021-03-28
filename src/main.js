@@ -4,7 +4,7 @@ import {
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import "bootstrap"
+import "bootstrap/js/dist/dropdown"
 import "bootstrap/dist/css/bootstrap.css"
 import "./style/index.css"
 import EventBus from "./utils/EventBus"
