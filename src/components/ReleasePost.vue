@@ -1,6 +1,5 @@
 <template>
   <div class="form-group w-100 px-2 mx-auto py-2 clearfix">
-    <!-- <textarea class="form-control" rows="5" v-model="content"></textarea> -->
     <input
       type="text"
       class="form-control mb-1"
@@ -9,12 +8,13 @@
       v-focus="isFocus"
       @blur="isFocus = false"
     />
-    <rich-text-editor @updateContent="updateContent" ref="editor" />
+    <!-- <rich-text-editor @updateContent="updateContent" ref="editor" /> -->
+    <textarea class="form-control" rows="5" v-model="content"></textarea>
     <button
       type="button"
       class="btn btn-primary btn-sm float-right mt-2"
       @click="releasePost"
-      :disabled="title === '' || !content[0]"
+      :disabled="title === '' || !content"
     >
       send
     </button>
@@ -25,22 +25,20 @@
 import { defineComponent, ref, reactive } from "vue";
 import store from "@/store";
 import { request, uploadImg } from "@/service.js";
-import CookieUtils from "@/utils/CookieUtils";
-import RichTextEditor from "@/components/RichTextEditor.vue";
+// import RichTextEditor from "@/components/RichTextEditor.vue";
 import { inject } from "vue";
 
 export default defineComponent({
   name: "HelloWorld",
-  components: { RichTextEditor },
+  // components: { RichTextEditor },
   setup() {
     const bus = inject("bus");
 
     const editor = ref(null);
     let title = ref("");
-    let content = ref([]);
+    let content = ref("");
     let isFocus = ref(false);
 
-    // let uid = Number.parseInt(CookieUtils.get("u_id"));
     let uid = Number.parseInt(localStorage.getItem("u_id"));
 
     const releasePost = () => {
@@ -59,8 +57,8 @@ export default defineComponent({
           JSON.stringify({
             u_id: uid,
             post_name: title.value,
-            post_txt: content.value[1],
-            post_txthtml: content.value[0],
+            post_txt: content.value,
+            post_txthtml: content.value,
           })
         )
         .then((res) => {
@@ -73,7 +71,8 @@ export default defineComponent({
               id = res.data.post_id;
               title.value = "";
               // console.log(editor.value.content);
-              editor.value.content = "";
+              // editor.value.content = "";
+              content.value = "";
               break;
             case 2:
               msg = "发帖人有问题";
@@ -92,11 +91,12 @@ export default defineComponent({
               data.append("object_id", Number.parseInt(res.data.post_id));
               data.append("image", store.state.postImage);
               return uploadImg(data);
+            } else {
+              return Promise.resolve({ data: { state: 1 } });
             }
           } else {
             return Promise.reject("发帖失败");
           }
-          console.log(res);
         })
         .then((res) => {
           console.log(res);

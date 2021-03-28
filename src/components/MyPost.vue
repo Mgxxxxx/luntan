@@ -1,5 +1,5 @@
 <template>
-  <loading v-if="isLoading && end" />
+  <loading v-if="isLoading" />
   <div v-if="!isLoading" class="card no-border">
     <div class="card-body">
       <div class="d-flex flex-column align-items-start">
@@ -64,7 +64,7 @@ export default defineComponent({
           }),
           getImg(postContent.img_id),
         ]);
-        console.log(res, res1);
+        // console.log(res, res1);
         postContent["poster"] = res.value.data.u_nickname;
         if (res1.value && res1.value.data) {
           postImage = window.URL.createObjectURL(res1.value.data);
@@ -76,7 +76,7 @@ export default defineComponent({
         postContent["poster"] = res.data.u_nickname;
       }
     } catch (error) {
-      console.log(error);
+      console.warn(error);
     }
 
     return {

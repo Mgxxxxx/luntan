@@ -25,13 +25,43 @@
       </div>
     </div>
     <Suspense>
-      <template #default v-if="!updating">
-        <my-post v-for="id in curPageIds" :key="id" :postId="id" />
+      <template #default>
+        <div v-show="!updating">
+          <!-- <my-post v-for="id in curPageIds" :key="id" :postId="id" /> -->
+          <my-post v-for="id in postIds[activePage]" :key="id" :postId="id" />
+        </div>
       </template>
       <template #fallback>
         <loading />
       </template>
     </Suspense>
+    <nav>
+      <ul class="pagination justify-content-center mt-2">
+        <li
+          class="page-item"
+          :class="{ disabled: activePage === 0 }"
+          @click="togglePage(activePage - 1)"
+        >
+          <a class="page-link" href="javascript:;" tabindex="-1">Previous</a>
+        </li>
+        <li
+          class="page-item"
+          :class="{ active: i === activePage + 1 }"
+          v-for="i in postIds.length"
+          :key="i + i * activePage"
+          @click="togglePage(i - 1)"
+        >
+          <a class="page-link" href="javascript:;">{{ i }}</a>
+        </li>
+        <li
+          class="page-item"
+          :class="{ disabled: activePage === postIds.length - 1 }"
+          @click="togglePage(activePage + 1)"
+        >
+          <a class="page-link" href="javascript:;">Next</a>
+        </li>
+      </ul>
+    </nav>
     <picture-area type="post" />
     <release-post ref="releasePost" />
     <static-footer class="mt-5 text-center" />
@@ -50,6 +80,8 @@ import PictureArea from "@/components/PictureArea.vue";
 
 import { request } from "@/service";
 
+import _ from "lodash";
+
 export default {
   name: "Home",
   components: {
@@ -66,12 +98,14 @@ export default {
     const releasePost = ref(null);
     let postIds = ref([]);
     let curPageIds = ref([]);
+    let activePage = ref(0);
     const updating = ref(false);
 
     bus.on("addPost", (id) => {
       updating.value = true;
       curPageIds.value.unshift(id);
       nextTick(() => (updating.value = false));
+      window.scrollTo(0, 0);
       console.log(id);
     });
 
@@ -82,18 +116,25 @@ export default {
 
     try {
       let res = await request.get("/allselectpostid");
-      // console.log(res);
+      console.log(res);
       for (let i = res.data.postids.length - 1; i >= 0; i--) {
         postIds.value.push(res.data.postids[i]);
       }
-      curPageIds.value = postIds.value.slice(0, 10);
+      postIds.value = _.chunk(postIds.value, 10);
     } catch (err) {
       console.log(err);
     }
 
+    const togglePage = (page) => {
+      if (page >= 0 && page < postIds.value.length) {
+        activePage.value = page;
+        nextTick(() => {
+          window.scrollTo(0, 0);
+        });
+      }
+    };
+
     const toRelease = () => {
-      // console.log(releasePost.value.$el);
-      // console.log(releasePost.value);
       releasePost.value.isFocus = true;
       releasePost.value.$el.scrollIntoView(false);
     };
@@ -101,11 +142,13 @@ export default {
     return reactive({
       postIds,
       curPageIds,
+      activePage,
       home,
       isFocus,
       updating,
       releasePost,
       toRelease,
+      togglePage,
     });
   },
 };

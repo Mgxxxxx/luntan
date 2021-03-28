@@ -3,10 +3,11 @@ import axios from 'axios';
 // import https from 'https';
 
 const request = axios.create({
-    baseURL: 'http://47.119.115.208:15656',
+    // baseURL: 'http://47.119.115.208:15656',
     // baseURL: 'http://192.168.2.212:15656',
+    baseURL: '/api',
     headers: {
-        // "Content-Type": "application/json; charset=utf-8"
+        "Content-Type": "application/json; charset=utf-8",
     },
     timeout: 2000,
     // validateStatus: (status) => {
@@ -26,6 +27,12 @@ request.interceptors.request.use(config => {
 }, err => {
     console.log(err);
 })
+
+// request.interceptors.response.use(config => {
+//     return config;
+// }, err => {
+//     console.log(err);
+// })
 
 const get = (url, data) => {
     return request({
@@ -66,14 +73,14 @@ const put = (url, data) => {
 
 function getImg(img_id) {
     if (img_id === "") return Promise.resolve("");
-    return request({
-        url: "/getimg",
-        method: "get",
-        params: {
-            img_id
-        },
-        responseType: "blob",
-    })
+    return request.get(
+        "/getimg", {
+            params: {
+                img_id
+            },
+            responseType: "blob",
+        }
+    )
 }
 
 function uploadImg(data) {

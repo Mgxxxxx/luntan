@@ -49,13 +49,9 @@ export default defineComponent({
         params: { comment_id: Number.parseInt(commentId.value) },
       });
       commentContent = res.data;
-      console.log(commentContent);
       commentContent["time"] = moment(res.data.comment_time).format(
         "YYYY-MM-DD HH:mm"
       );
-      // res = await request.get("/selectuseronid", {
-      //   params: { u_id: commentContent.u_id },
-      // });
       let res1;
       [res, res1] = await Promise.allSettled([
         request.get("/selectuseronid", {
@@ -63,13 +59,12 @@ export default defineComponent({
         }),
         getImg(commentContent.img_id),
       ]);
-      console.log(res, res1);
       if (res1.value && res1.value.data) {
         commentImage = window.URL.createObjectURL(res1.value.data);
       }
-      commentContent["poster"] = res.value.data.u_nickname;
+      commentContent["poster"] = res?.value?.data.u_nickname ?? "老色皮";
       res = await getImg(res.value.data.img_id);
-      imgSrc = window.URL.createObjectURL(res.data);
+      imgSrc = res?.value?.data ?? "";
     } catch (error) {
       console.log(error);
     }

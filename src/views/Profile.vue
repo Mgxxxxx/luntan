@@ -33,7 +33,7 @@
               <li
                 class="page-item"
                 :class="{ disabled: activePage === 0 }"
-                @click="tooglePage(activePage - 1)"
+                @click="togglePage(activePage - 1)"
               >
                 <a class="page-link" href="javascript:;">Previous</a>
               </li>
@@ -42,14 +42,14 @@
                 :class="{ active: i - 1 === activePage }"
                 v-for="i in allPosts.length"
                 :key="i"
-                @click="tooglePage(i - 1)"
+                @click="togglePage(i - 1)"
               >
                 <a class="page-link" href="javascript:;">{{ i }}</a>
               </li>
               <li
                 class="page-item"
                 :class="{ disabled: activePage === allPosts.length - 1 }"
-                @click="tooglePage(activePage + 1)"
+                @click="togglePage(activePage + 1)"
               >
                 <a class="page-link" href="javascript:;">Next</a>
               </li>
@@ -63,7 +63,6 @@
 <script>
 import { defineComponent, inject, ref, onUnmounted } from "vue";
 import Avatar from "@/components/Avatar.vue";
-import CookieUtils from "@/utils/CookieUtils.js";
 import store from "@/store";
 import { request } from "@/service";
 import _ from "lodash";
@@ -73,9 +72,7 @@ export default defineComponent({
   components: { Avatar },
   async setup() {
     const bus = inject("bus");
-    // const userName = CookieUtils.get("u_nickname");
     const userName = localStorage.getItem("u_nickname");
-    // const uid = CookieUtils.get("u_id");
     const uid = localStorage.getItem("u_id");
     let postIds = [];
     const allPosts = ref([]);
@@ -97,7 +94,6 @@ export default defineComponent({
       console.log(file);
       const data = new FormData();
       data.append("object", "user");
-      // data.append("object_id", Number.parseInt(CookieUtils.get("u_id")));
       data.append("object_id", Number.parseInt(localStorage.getItem("u_id")));
       data.append("image", file, file.name);
       try {
@@ -105,11 +101,9 @@ export default defineComponent({
           headers: { "Content-Type": "multipart/form-data" },
         });
         res = await request.get("/selectuseronid", {
-          // params: { u_id: Number.parseInt(CookieUtils.get("u_id")) },
           params: { u_id: Number.parseInt(localStorage.getItem("u_id")) },
         });
         console.log(res);
-        // CookieUtils.set("img_id", res.data.img_id, 24 * 60 * 60 * 100, "/");
         localStorage.setItem("img_id", res.data.img_id);
       } catch (err) {
         console.log(err);
@@ -119,7 +113,7 @@ export default defineComponent({
 
     const deletePost = async (id) => {
       try {
-        res = await request.post(
+        let res = await request.post(
           "/deletepostonid",
           JSON.stringify({
             post_id: Number.parseInt(id),
@@ -149,13 +143,12 @@ export default defineComponent({
       return request({
         url: "/getimg",
         method: "get",
-        // params: { img_id: CookieUtils.get("img_id") },
         params: { img_id: localStorage.getItem("img_id") },
         responseType: "blob",
       });
     };
 
-    const tooglePage = (page) => {
+    const togglePage = (page) => {
       if (page >= 0 && page < allPosts.value.length) {
         activePage.value = page;
       }
@@ -168,9 +161,18 @@ export default defineComponent({
       getUserHeadImg(),
     ]);
     console.log(res1, res2);
-    imgSrc = window.URL.createObjectURL(res2.value.data);
-    postIds = res1.value.data.postids.reverse();
-    // console.log(postIds.length);
+    if (res2?.value?.data === undefined) {
+      console.log("获取用户头像失败");
+      imgSrc = "";
+    } else {
+      imgSrc = window.URL.createObjectURL(res2.value.data);
+    }
+    console.log(res1);
+    postIds =
+      res1?.value?.data?.postids === (undefined || null)
+        ? []
+        : res1.value.data.postids.reverse();
+    console.log(postIds);
     for (let i = 0; i < postIds.length; i++, numOfEndPost++) {
       let item = await request.get("selectpostonid", {
         params: { post_id: Number.parseInt(postIds[i]) },
@@ -181,14 +183,13 @@ export default defineComponent({
 
     return {
       userName,
-      postIds,
       activePage,
       imgSrc,
       allPosts,
       customFile,
       headerImg,
       deletePost,
-      tooglePage,
+      togglePage,
       upload,
     };
   },

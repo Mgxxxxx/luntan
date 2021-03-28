@@ -11,5 +11,17 @@ module.exports = {
       })
     ]
   },
-  publicPath: '/'
+  publicPath: '/',
+  devServer: {
+    proxy: {
+      "/api": {
+        target: 'http://47.119.115.208:15656',
+        changeOrigin: true,
+        ws: true,
+        pathRewrite: {
+          '^/api': '/', //重写请求路径
+        },
+      }
+    }
+  }
 };

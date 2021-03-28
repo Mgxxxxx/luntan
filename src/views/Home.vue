@@ -50,7 +50,6 @@ import StaticFooter from "@/components/StaticFooter.vue";
 import ScrollToTop from "@/components/ScrollToTop.vue";
 import Alert from "@/components/Alert.vue";
 
-import CookieUtils from "@/utils/CookieUtils";
 import { useRouter } from "vue-router";
 
 export default {
@@ -65,14 +64,11 @@ export default {
     const bus = inject("bus");
     const home = ref(null);
     const alert = ref(null);
-    // let nickname = ref(CookieUtils.get("u_nickname"));
     let nickname = ref(localStorage.getItem("u_nickname"));
-    // const uid = CookieUtils.get("u_id");
     const uid = localStorage.getItem("u_id");
     const router = useRouter();
 
     onMounted(() => {
-      // if (!CookieUtils.get("u_id")) {
       if (!localStorage.getItem("u_id")) {
         router.push("/login");
         return;
@@ -80,7 +76,7 @@ export default {
     });
 
     bus.on("alert", () => {
-      // console.log("has listened alert");
+      console.log("has listened alert");
       alert.value && alert.value.alert();
     });
 
@@ -89,9 +85,6 @@ export default {
     };
 
     const logout = () => {
-      // CookieUtils.unset("u_nickname");
-      // CookieUtils.unset("u_id");
-      // CookieUtils.unset("img_id");
       localStorage.removeItem("u_id");
       localStorage.removeItem("u_nickname");
       localStorage.removeItem("img_id");

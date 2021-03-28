@@ -81,7 +81,6 @@ import store from "@/store";
 
 import { useRoute } from "vue-router";
 
-import CookieUtils from "@/utils/CookieUtils.js";
 import { request, getImg, uploadImg } from "@/service";
 import moment from "moment";
 
@@ -131,10 +130,18 @@ export default defineComponent({
         getImg(postContent.user_img_id),
         getImg(postContent.img_id),
       ]);
-      imgSrc = window.URL.createObjectURL(res1.value.data);
-      console.log(res2);
-      postImage = res2.value ? window.URL.createObjectURL(res2.value.data) : "";
-      console.log(res);
+      if (res1?.value?.data === undefined) {
+        console.warn("获取用户头像失败");
+        imgSrc = "";
+      } else {
+        imgSrc = window.URL.createObjectURL(res1.value.data);
+      }
+      if (res2?.value?.data === undefined) {
+        console.warn("获取帖子图片失败");
+        postImage = "";
+      } else {
+        postImage = window.URL.createObjectURL(res2.value.data);
+      }
       if (res.value.data.commentids !== null) {
         commentIds.value = res.value.data.commentids;
       }
@@ -157,7 +164,6 @@ export default defineComponent({
           "/createcomment",
           JSON.stringify({
             post_id: Number.parseInt(route.params.id),
-            // u_id: Number.parseInt(CookieUtils.get("u_id")),
             u_id: Number.parseInt(localStorage.getItem("u_id")),
             comment_txt: replyContent.value,
           })
