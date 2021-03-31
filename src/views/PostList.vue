@@ -117,7 +117,7 @@ export default {
     });
 
     try {
-      let res = await request.get("/allselectpostid");
+      let res = await request.get("/allpostid");
       console.log(res);
       for (let i = res.data.postids.length - 1; i >= 0; i--) {
         postIds.value.push(res.data.postids[i]);

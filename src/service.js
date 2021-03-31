@@ -10,6 +10,7 @@ const request = axios.create({
         "Content-Type": "application/json; charset=utf-8",
     },
     timeout: 2000,
+    withCredentials: true
     // validateStatus: (status) => {
     //     return status >= 200 && status < 300;
     // },
