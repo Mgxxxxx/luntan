@@ -97,7 +97,7 @@ export default defineComponent({
             // CookieUtils.set("u_nickname", res.data.u_nickname);
             localStorage.setItem("u_id", res.data.u_id);
             localStorage.setItem("u_nickname", res.data.u_nickname);
-            console.log(localStorage.getItem("u_id"));
+            // console.log(localStorage.getItem("u_id"));
             res = await request.get("/selectuseronid", {
               // params: { u_id: Number.parseInt(CookieUtils.get("u_id")) },
               params: { u_id: Number.parseInt(localStorage.getItem("u_id")) },

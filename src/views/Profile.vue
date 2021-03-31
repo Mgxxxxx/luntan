@@ -77,7 +77,6 @@ export default defineComponent({
     let postIds = [];
     const allPosts = ref([]);
     const activePage = ref(0);
-    const customFile = ref(null);
     const headerImg = ref(null);
     let imgSrc = "";
 
@@ -86,7 +85,7 @@ export default defineComponent({
     });
 
     const getPostId = () =>
-      request.get("/selectpostidbyuid", {
+      request.get("allpostidonuid", {
         params: { u_id: Number.parseInt(uid) },
       });
 
@@ -119,11 +118,11 @@ export default defineComponent({
             post_id: Number.parseInt(id),
           })
         );
-        console.log(res);
+        // console.log(res);
         if (res.data.state === 1) {
           store.commit("setAlertMsg", "删除成功");
           store.commit("setAlertStatus", "alert-success");
-          console.log(typeof id);
+          // console.log(typeof id);
           let index = allPosts.value[activePage.value].findIndex(
             (item) => item.id === id
           );
@@ -156,23 +155,20 @@ export default defineComponent({
 
     let numOfEndPost = 0;
 
-    let [res1, res2] = await Promise.allSettled([
-      getPostId(),
-      getUserHeadImg(),
-    ]);
-    console.log(res1, res2);
-    if (res2?.value?.data === undefined) {
+    let [res1, res2] = await Promise.all([getPostId(), getUserHeadImg()]);
+    // console.log(res1, res2);
+    if (res2.data === undefined) {
       console.warn("获取用户头像失败");
       imgSrc = "";
     } else {
-      imgSrc = window.URL.createObjectURL(res2.value.data);
+      imgSrc = window.URL.createObjectURL(res2.data);
     }
-    console.log(res1);
+    // console.log(res1);
     postIds =
-      res1?.value?.data?.postids === (undefined || null)
+      res1.data.postids === (undefined || null)
         ? []
-        : res1.value.data.postids.reverse();
-    console.log(postIds);
+        : res1.data.postids.reverse();
+    // console.log(postIds);
     for (let i = 0; i < postIds.length; i++, numOfEndPost++) {
       let item = await request.get("selectpostonid", {
         params: { post_id: Number.parseInt(postIds[i]) },
@@ -186,7 +182,6 @@ export default defineComponent({
       activePage,
       imgSrc,
       allPosts,
-      customFile,
       headerImg,
       deletePost,
       togglePage,

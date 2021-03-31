@@ -26,9 +26,9 @@
     </div>
     <Suspense>
       <template #default>
-        <div v-show="!updating">
-          <!-- <my-post v-for="id in curPageIds" :key="id" :postId="id" /> -->
-          <my-post v-for="id in postIds[activePage]" :key="id" :postId="id" />
+        <div>
+          <!-- <my-post v-for="id in postIds[activePage]" :key="id" :postId="id" /> -->
+          <my-post v-for="id in activePageIds" :key="id" :postId="id" />
         </div>
       </template>
       <template #fallback>
@@ -97,18 +97,24 @@ export default {
     let isFocus = ref(true);
     const releasePost = ref(null);
     let postIds = ref([]);
-    let curPageIds = ref([]);
     let activePage = ref(0);
-    const updating = ref(false);
+    // const updating = ref(false);
     const pictureArea = ref(null);
+    const activePageIds = ref([]);
 
     bus.on("addPost", (id) => {
-      updating.value = true;
-      curPageIds.value.unshift(id);
-      pictureArea.value.imgSrc = "";
-      nextTick(() => (updating.value = false));
-      window.scrollTo(0, 0);
-      console.log(id);
+      // updating.value = true;
+      postIds.value = _.flatten(postIds.value);
+      postIds.value.unshift(id);
+      postIds.value = _.chunk(postIds.value, 10);
+      activePageIds.value = postIds.value[0];
+      if (pictureArea.value) pictureArea.value.imgSrc = "";
+      // nextTick(() => (updating.value = false));
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+      // console.log(id);
     });
 
     onMounted(() => {
@@ -118,40 +124,50 @@ export default {
 
     try {
       let res = await request.get("/allpostid");
-      console.log(res);
+      // console.log(res);
       for (let i = res.data.postids.length - 1; i >= 0; i--) {
         postIds.value.push(res.data.postids[i]);
       }
       postIds.value = _.chunk(postIds.value, 10);
+      activePageIds.value = postIds.value[0];
     } catch (err) {
       console.log(err);
     }
 
+    let flag = true;
     const togglePage = (page) => {
       if (page >= 0 && page < postIds.value.length) {
+        if (flag) {
+          activePageIds.value = postIds.value[page].reverse();
+        }
         activePage.value = page;
         nextTick(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo({
+            top: 0,
+          });
         });
       }
     };
 
     const toRelease = () => {
       releasePost.value.isFocus = true;
-      releasePost.value.$el.scrollIntoView(false);
+      releasePost.value.$el.scrollIntoView({
+        block: "end",
+        behavior: "smooth",
+      });
     };
 
     return reactive({
       postIds,
-      curPageIds,
       activePage,
       home,
       isFocus,
-      updating,
+      // updating,
       pictureArea,
       releasePost,
       toRelease,
       togglePage,
+      activePageIds,
     });
   },
 };

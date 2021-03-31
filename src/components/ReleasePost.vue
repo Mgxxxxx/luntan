@@ -42,14 +42,6 @@ export default defineComponent({
     let uid = Number.parseInt(localStorage.getItem("u_id"));
 
     const releasePost = () => {
-      if (title.value.includes("莫广贤")) {
-        alert("???");
-        return;
-      }
-      if (content.value.includes("莫广贤")) {
-        alert("????");
-        return;
-      }
       let id;
       request
         .post(
@@ -70,13 +62,7 @@ export default defineComponent({
               status = "alert-success";
               id = res.data.post_id;
               title.value = "";
-              // console.log(editor.value.content);
-              // editor.value.content = "";
               content.value = "";
-              break;
-            case 2:
-              msg = "发帖人有问题";
-              status = "alert-danger";
               break;
             default:
               msg = "发帖失败";
@@ -99,17 +85,18 @@ export default defineComponent({
           }
         })
         .then((res) => {
-          console.log(res);
+          // console.log(res);
           if (res.data.state === 1) {
             window.URL.revokeObjectURL(store.state.postImage);
             store.commit("setPostImage", null);
             bus.emit("addPost", id);
+            // console.log(store.state.alertStatus);
             bus.emit("alert");
           } else return Promise.reject("帖子添加图片失败");
         })
         .catch((err) => {
           console.log(err);
-          store.commit("setAlertStatus", "发帖失败");
+          store.commit("setAlertStatus", err);
           bus.emit("alert");
         });
     };

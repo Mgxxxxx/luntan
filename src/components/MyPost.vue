@@ -43,6 +43,7 @@ export default defineComponent({
   async setup(props, ctx) {
     const router = useRouter();
     const { postId } = toRefs(props);
+    // console.log(postId.value);
     let postContent = null;
     let isLoading = ref(true);
     let postImage = "";

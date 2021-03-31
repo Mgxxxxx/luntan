@@ -76,7 +76,7 @@ export default {
     });
 
     bus.on("alert", () => {
-      console.log("has listened alert");
+      // console.log("has listened alert");
       alert.value && alert.value.alert();
     });
 
