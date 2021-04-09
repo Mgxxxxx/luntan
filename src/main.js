@@ -7,16 +7,16 @@ import store from './store'
 import "bootstrap/js/dist/dropdown"
 import "bootstrap/dist/css/bootstrap.css"
 import "./style/index.css"
-import EventBus from "./utils/EventBus"
+// import EventBus from "./utils/EventBus"
 import Alert from "./components/Alert.vue"
 import Loading from "./components/Loading.vue"
 
-const bus = new EventBus();
+// const bus = new EventBus();
 
 const app = createApp(App).use(store).use(router);
 
-app.provide("bus", bus);
-app.config.globalProperties.bus = bus;
+// app.provide("bus", bus);
+// app.config.globalProperties.bus = bus;
 
 app.component("Alert", Alert);
 app.component("Loading", Loading);
