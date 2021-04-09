@@ -102,20 +102,6 @@ export default {
     const pictureArea = ref(null);
     const activePageIds = ref([]);
 
-    // bus.on("addPost", (id) => {
-    //   // updating.value = true;
-    //   postIds.value = _.flatten(postIds.value);
-    //   postIds.value.unshift(id);
-    //   postIds.value = _.chunk(postIds.value, 10);
-    //   activePageIds.value = postIds.value[0];
-    //   if (pictureArea.value) pictureArea.value.imgSrc = "";
-    //   // nextTick(() => (updating.value = false));
-    //   window.scrollTo({
-    //     top: 0,
-    //     behavior: "smooth",
-    //   });
-    //   // console.log(id);
-    // });
     const addPost = (id) => {
       // updating.value = true;
       console.log("tinajia tiezi");

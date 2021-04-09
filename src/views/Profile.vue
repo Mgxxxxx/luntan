@@ -123,9 +123,6 @@ export default defineComponent({
         if (res.state === 1) {
           info.msg = "删除成功";
           info.status = "alert-success";
-          // store.commit("setAlertMsg", "删除成功");
-          // store.commit("setAlertStatus", "alert-success");
-          // console.log(typeof id);
           let index = allPosts.value[activePage.value].findIndex(
             (item) => item.id === id
           );
@@ -133,11 +130,8 @@ export default defineComponent({
           allPosts.value = _.chunk(_.flatten(allPosts.value), 10);
         } else {
           info.msg = "删除失败";
-          // store.commit("setAlertMsg", "删除失败");
-          // store.commit("setAlertStatus", "alert-danger");
         }
         store.commit("alert", info);
-        // bus.emit("alert");
       } catch (err) {
         console.warn(err);
       }

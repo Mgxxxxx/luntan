@@ -1,12 +1,4 @@
 <template>
-  <!-- <div
-    class="alert alert-dismissible fade show w-50"
-    :class="[store.state.alertStatus]"
-    role="alert"
-    ref="baseAlert"
-  >
-    {{ store.state.alertMsg }}
-  </div> -->
   <div
     class="alert alert-dismissible fade show w-50"
     :class="alertInfo.status"

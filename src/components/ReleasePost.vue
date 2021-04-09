@@ -31,8 +31,6 @@ export default defineComponent({
   name: "HelloWorld",
   // components: { RichTextEditor },
   setup() {
-    // const bus = inject("bus");
-
     const { parent } = getCurrentInstance();
     console.log(parent.ctx);
 
@@ -73,8 +71,6 @@ export default defineComponent({
           }
           info.msg = msg;
           info.status = status;
-          // store.commit("setAlertMsg", msg);
-          // store.commit("setAlertStatus", status);
           if (res.state === 1) {
             if (store.state.postImage) {
               const data = new FormData();
@@ -94,25 +90,18 @@ export default defineComponent({
           if (res.state === 1) {
             window.URL.revokeObjectURL(store.state.postImage);
             store.commit("setPostImage", null);
-            // bus.emit("addPost", id);
             parent.ctx?.addPost(id);
-            // console.log(store.state.alertStatus);
             store.commit("alert", info);
-            // bus.emit("alert");
           } else return Promise.reject("帖子添加图片失败");
         })
         .catch((err) => {
           console.warn(err);
           info.msg = err;
           store.commit("alert", info);
-          // store.commit("setAlertStatus", err);
-          // bus.emit("alert");
         });
     };
 
     const updateContent = (contentHtml, contentText) => {
-      // console.log(contentHtml);
-      // console.log(contentText);
       content.value[0] = contentHtml;
       content.value[1] = contentText;
     };

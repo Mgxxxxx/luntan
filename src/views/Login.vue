@@ -88,14 +88,10 @@ export default defineComponent({
         switch (res.state) {
           case 0:
             info.msg = "该账号未注册";
-            // store.commit("setAlertMsg", "该账号未注册");
-            // store.commit("setAlertStatus", "alert-warning");
             break;
           case 1:
             info.msg = "登录成功";
             info.status = "alert-success";
-            // store.commit("setAlertMsg", "登录成功");
-            // store.commit("setAlertStatus", "alert-success");
             localStorage.setItem("u_id", res.u_id);
             localStorage.setItem("u_nickname", res.u_nickname);
             res = await request.get("/selectuseronid", {
@@ -106,13 +102,9 @@ export default defineComponent({
             break;
           case 2:
             info.msg = "帐号或密码错误";
-            // store.commit("setAlertMsg", "帐号或密码错误");
-            // store.commit("setAlertStatus", "alert-danger");
             break;
           default:
             info.msg = "其他问题";
-          // store.commit("setAlertMsg", "其他问题");
-          // store.commit("setAlertStatus", "alert-danger");
         }
         alert.value.alert(info);
       } catch (err) {
