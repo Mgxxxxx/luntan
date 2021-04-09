@@ -17,40 +17,57 @@
         </div>
       </div>
       <div class="content-footer">
-        <span class="content-time mr-2">
+        <span class="content-time">
           {{ commentContent.time }}
         </span>
         <span class="content-reply">回复(0)</span>
+        <span
+          class="content-reply"
+          v-if="canDel"
+          @click="delComment(commentId, parent)"
+          >删除</span
+        >
       </div>
     </div>
   </div>
 </template>
 <script>
-import { defineComponent, onBeforeUnmount, ref, toRefs } from "vue";
+import {
+  defineComponent,
+  getCurrentInstance,
+  onBeforeUnmount,
+  ref,
+  toRefs,
+} from "vue";
 import { request, getImg } from "@/service.js";
+import { delComment } from "./Floor/index.js";
 import moment from "moment";
 
 export default defineComponent({
   name: "Floor",
   props: ["commentId"],
   async setup(props) {
+    const { parent } = getCurrentInstance();
     const { commentId } = toRefs(props);
     let commentContent = ref(null);
     let imgSrc = "";
     let commentImage = "";
+    let canDel;
     onBeforeUnmount(() => {
       imgSrc !== "" && window.URL.revokeObjectURL(imgSrc);
       commentImage !== "" && window.URL.revokeObjectURL(commentImage);
       localStorage.removeItem(commentContent.u_id + "headimg");
-      console.log("leave floor");
+      // console.log("leave floor");
     });
 
     try {
       let res = await request.get("/selectcommentonid", {
         params: { comment_id: Number.parseInt(commentId.value) },
       });
-      commentContent = res.data;
-      commentContent["time"] = moment(res.data.comment_time).format(
+      commentContent = res;
+      canDel =
+        Number.parseInt(localStorage.getItem("u_id")) === commentContent.u_id;
+      commentContent["time"] = moment(res.comment_time).format(
         "YYYY-MM-DD HH:mm"
       );
       imgSrc = localStorage.getItem(commentContent.u_id + "headimg") ?? "";
@@ -62,14 +79,14 @@ export default defineComponent({
         getImg(commentContent.img_id),
       ]);
       if (res1.value?.data) {
-        commentImage = window.URL.createObjectURL(res1.value.data);
+        commentImage = window.URL.createObjectURL(res1.value);
       }
-      commentContent["poster"] = res.value?.data?.u_nickname ?? "老色皮";
+      commentContent["poster"] = res.value?.u_nickname ?? "老色皮";
       if (imgSrc === "") {
-        let commenterId = res.value.data.u_id;
-        res = await getImg(res.value.data.img_id);
-        if (res.data) {
-          imgSrc = window.URL.createObjectURL(res.data);
+        let commenterId = res.value.u_id;
+        res = await getImg(res.value.img_id);
+        if (res) {
+          imgSrc = window.URL.createObjectURL(res);
           localStorage.setItem(commenterId + "headimg", imgSrc);
         } else imgSrc = "";
       }
@@ -80,7 +97,10 @@ export default defineComponent({
     return {
       commentContent,
       imgSrc,
+      canDel,
+      parent,
       commentImage,
+      delComment,
     };
   },
 });
@@ -127,6 +147,7 @@ export default defineComponent({
       .content-reply {
         color: #0984e3;
         cursor: pointer;
+        margin-left: 5px;
       }
     }
   }

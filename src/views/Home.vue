@@ -5,7 +5,7 @@
       class="navbar-brand mb-0 h1"
       style="cursor: pointer"
       @click="router.push('/')"
-      >巫妖岭论坛</span
+      >Forum</span
     >
     <div class="dropdown dropleft">
       <button
@@ -52,6 +52,8 @@ import Alert from "@/components/Alert.vue";
 
 import { useRouter } from "vue-router";
 
+import store from "@/store";
+
 export default {
   name: "Home",
   components: {
@@ -72,6 +74,8 @@ export default {
       if (!localStorage.getItem("u_id")) {
         router.push("/login");
         return;
+      } else {
+        store.commit("setAlert", alert.value);
       }
     });
 

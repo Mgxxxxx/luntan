@@ -9,17 +9,8 @@ const request = axios.create({
     headers: {
         "Content-Type": "application/json; charset=utf-8",
     },
-    timeout: 2000,
+    timeout: 5000,
     withCredentials: true
-    // validateStatus: (status) => {
-    //     return status >= 200 && status < 300;
-    // },
-    // httpAgent: new http.Agent({
-    //     keepAlive: true
-    // }),
-    // httpsAgent: new https.Agent({
-    //     keepAlive: true
-    // }),
 })
 
 request.interceptors.request.use(config => {
@@ -29,48 +20,14 @@ request.interceptors.request.use(config => {
     console.log(err);
 })
 
-// request.interceptors.response.use(config => {
-//     return config;
-// }, err => {
-//     console.log(err);
-// })
-
-const get = (url, data) => {
-    return request({
-        methods: 'get',
-        url,
-        params: data
-    })
-};
-const post = (url, data) => {
-    console.log(url, data);
-    return request({
-        methods: 'post',
-        url,
-        data
-    })
-};
-const _delete = (url, data) => {
-    return request({
-        methods: 'delete',
-        url,
-        ...data
-    })
-};
-const put = (url, data) => {
-    return request({
-        methods: 'put',
-        url,
-        data
-    })
-};
-
-// export default {
-//     get,
-//     post,
-//     _delete,
-//     put
-// };
+request.interceptors.response.use(res => {
+    if (res.status !== 200) {
+        console.log(res);
+    }
+    return res.data;
+}, err => {
+    console.log(err);
+})
 
 function getImg(img_id) {
     if (img_id === "") return Promise.resolve("");
@@ -92,8 +49,15 @@ function uploadImg(data) {
     })
 }
 
+function delCommentById(id) {
+    return request.post("deletecommentonid", {
+        comment_id: Number(id)
+    })
+}
+
 export {
     request,
     getImg,
-    uploadImg
+    uploadImg,
+    delCommentById
 };

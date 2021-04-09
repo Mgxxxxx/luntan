@@ -12,8 +12,8 @@
             class="wrap-right d-flex align-items-center justify-content-between"
           >
             <div class="d-flex flex-column align-items-start">
-              <div class="h4 mb-0">510吧</div>
-              <div>国内最大的510宿舍交流讨论社区之一</div>
+              <div class="h4 mb-0">Forum吧</div>
+              <div>国内最大的Forum交流讨论社区之一</div>
             </div>
             <div>
               <button class="btn btn-primary px-4" @click="toRelease">
@@ -71,7 +71,7 @@
 
 <script>
 // @ is an alias to /src
-import { onMounted, reactive, ref, inject, nextTick } from "vue";
+import { onMounted, reactive, ref, nextTick } from "vue";
 import ReleasePost from "@/components/ReleasePost.vue";
 import MyPost from "@/components/MyPost.vue";
 import StaticFooter from "@/components/StaticFooter.vue";
@@ -92,7 +92,7 @@ export default {
     PictureArea,
   },
   async setup() {
-    const bus = inject("bus");
+    // const bus = inject("bus");
     const home = ref(null);
     let isFocus = ref(true);
     const releasePost = ref(null);
@@ -102,8 +102,23 @@ export default {
     const pictureArea = ref(null);
     const activePageIds = ref([]);
 
-    bus.on("addPost", (id) => {
+    // bus.on("addPost", (id) => {
+    //   // updating.value = true;
+    //   postIds.value = _.flatten(postIds.value);
+    //   postIds.value.unshift(id);
+    //   postIds.value = _.chunk(postIds.value, 10);
+    //   activePageIds.value = postIds.value[0];
+    //   if (pictureArea.value) pictureArea.value.imgSrc = "";
+    //   // nextTick(() => (updating.value = false));
+    //   window.scrollTo({
+    //     top: 0,
+    //     behavior: "smooth",
+    //   });
+    //   // console.log(id);
+    // });
+    const addPost = (id) => {
       // updating.value = true;
+      console.log("tinajia tiezi");
       postIds.value = _.flatten(postIds.value);
       postIds.value.unshift(id);
       postIds.value = _.chunk(postIds.value, 10);
@@ -115,7 +130,7 @@ export default {
         behavior: "smooth",
       });
       // console.log(id);
-    });
+    };
 
     onMounted(() => {
       let navHeight = $(".navbar")[0].offsetHeight;
@@ -125,8 +140,8 @@ export default {
     try {
       let res = await request.get("/allpostid");
       // console.log(res);
-      for (let i = res.data.postids.length - 1; i >= 0; i--) {
-        postIds.value.push(res.data.postids[i]);
+      for (let i = res.postids.length - 1; i >= 0; i--) {
+        postIds.value.push(res.postids[i]);
       }
       postIds.value = _.chunk(postIds.value, 10);
       activePageIds.value = postIds.value[0];
@@ -168,6 +183,7 @@ export default {
       toRelease,
       togglePage,
       activePageIds,
+      addPost,
     });
   },
 };

@@ -4,17 +4,25 @@ import {
 
 export default createStore({
   state: {
-    alertMsg: "",
-    alertStatus: "",
+    alert: null,
+    // alertMsg: "",
+    // alertStatus: "",
     postImage: null,
-    commentImage: null
+    commentImage: null,
+    clickDelay: 1000
   },
   mutations: {
-    setAlertMsg(s, msg) {
-      s.alertMsg = msg;
+    setAlert(s, p) {
+      s.alert = p;
     },
-    setAlertStatus(s, status) {
-      s.alertStatus = status;
+    // setAlertMsg(s, msg) {
+    //   s.alertMsg = msg;
+    // },
+    // setAlertStatus(s, status) {
+    //   s.alertStatus = status;
+    // },
+    alert(s, payload) {
+      s.alert.alert(payload);
     },
     setPostImage(s, image) {
       s.postImage = image;

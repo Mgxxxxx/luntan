@@ -61,7 +61,7 @@
   </div>
 </template>
 <script>
-import { defineComponent, inject, ref, onBeforeUnmount } from "vue";
+import { defineComponent, ref, onBeforeUnmount } from "vue";
 import Avatar from "@/components/Avatar.vue";
 import store from "@/store";
 import { request } from "@/service";
@@ -71,7 +71,7 @@ export default defineComponent({
   name: "Profile",
   components: { Avatar },
   async setup() {
-    const bus = inject("bus");
+    // const bus = inject("bus");
     const userName = localStorage.getItem("u_nickname");
     const uid = localStorage.getItem("u_id");
     let postIds = [];
@@ -103,7 +103,7 @@ export default defineComponent({
           params: { u_id: Number.parseInt(localStorage.getItem("u_id")) },
         });
         console.log(res);
-        localStorage.setItem("img_id", res.data.img_id);
+        localStorage.setItem("img_id", res.img_id);
       } catch (err) {
         console.log(err);
       }
@@ -111,6 +111,7 @@ export default defineComponent({
     };
 
     const deletePost = async (id) => {
+      let info = { msg: "", status: "alert-danger" };
       try {
         let res = await request.post(
           "/deletepostonid",
@@ -119,9 +120,11 @@ export default defineComponent({
           })
         );
         // console.log(res);
-        if (res.data.state === 1) {
-          store.commit("setAlertMsg", "删除成功");
-          store.commit("setAlertStatus", "alert-success");
+        if (res.state === 1) {
+          info.msg = "删除成功";
+          info.status = "alert-success";
+          // store.commit("setAlertMsg", "删除成功");
+          // store.commit("setAlertStatus", "alert-success");
           // console.log(typeof id);
           let index = allPosts.value[activePage.value].findIndex(
             (item) => item.id === id
@@ -129,12 +132,14 @@ export default defineComponent({
           allPosts.value[activePage.value].splice(index, 1);
           allPosts.value = _.chunk(_.flatten(allPosts.value), 10);
         } else {
-          store.commit("setAlertMsg", "删除失败");
-          store.commit("setAlertStatus", "alert-danger");
+          info.msg = "删除失败";
+          // store.commit("setAlertMsg", "删除失败");
+          // store.commit("setAlertStatus", "alert-danger");
         }
-        bus.emit("alert");
+        store.commit("alert", info);
+        // bus.emit("alert");
       } catch (err) {
-        console.log(err);
+        console.warn(err);
       }
     };
 
@@ -157,23 +162,21 @@ export default defineComponent({
 
     let [res1, res2] = await Promise.all([getPostId(), getUserHeadImg()]);
     // console.log(res1, res2);
-    if (res2.data === undefined) {
+    if (res2 === undefined) {
       console.warn("获取用户头像失败");
       imgSrc = "";
     } else {
-      imgSrc = window.URL.createObjectURL(res2.data);
+      imgSrc = window.URL.createObjectURL(res2);
     }
     // console.log(res1);
     postIds =
-      res1.data.postids === (undefined || null)
-        ? []
-        : res1.data.postids.reverse();
+      res1.postids === (undefined || null) ? [] : res1.postids.reverse();
     // console.log(postIds);
     for (let i = 0; i < postIds.length; i++, numOfEndPost++) {
       let item = await request.get("selectpostonid", {
         params: { post_id: Number.parseInt(postIds[i]) },
       });
-      allPosts.value.push({ id: postIds[i], ...item.data });
+      allPosts.value.push({ id: postIds[i], ...item });
     }
     allPosts.value = _.chunk(allPosts.value, 10);
 

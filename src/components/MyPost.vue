@@ -53,11 +53,9 @@ export default defineComponent({
       let res = await request.get("/selectpostonid", {
         params: { post_id: Number.parseInt(postId.value) },
       });
-      postContent = res.data;
+      postContent = res;
       isLoading.value = false;
-      postContent["time"] = moment(res.data.post_time).format(
-        "YYYY-MM-DD HH:mm"
-      );
+      postContent["time"] = moment(res.post_time).format("YYYY-MM-DD HH:mm");
       if (postContent.img_id) {
         [res, res1] = await Promise.allSettled([
           request.get("/selectuseronid", {
@@ -66,15 +64,15 @@ export default defineComponent({
           getImg(postContent.img_id),
         ]);
         // console.log(res, res1);
-        postContent["poster"] = res.value.data.u_nickname;
-        if (res1.value && res1.value.data) {
-          postImage = window.URL.createObjectURL(res1.value.data);
+        postContent["poster"] = res.value.u_nickname;
+        if (res1.value && res1.value) {
+          postImage = window.URL.createObjectURL(res1.value);
         }
       } else {
         res = await request.get("/selectuseronid", {
           params: { u_id: postContent.u_id },
         });
-        postContent["poster"] = res.data.u_nickname;
+        postContent["poster"] = res.u_nickname;
       }
     } catch (error) {
       console.warn(error);

@@ -15,7 +15,7 @@
         class="form-control"
         placeholder="Password"
         v-model="passwd"
-        @keyup.enter="login"
+        @keyup.enter="_login"
       />
     </div>
     <div class="form-group" v-show="!mode">
@@ -33,7 +33,7 @@
       v-if="!mode"
       type="button"
       class="btn btn-primary btn-sm float-right"
-      @click="register"
+      @click="_register"
       :disabled="account === '' || passwd === '' || name === ''"
     >
       Sign up
@@ -42,7 +42,7 @@
       v-else
       type="button"
       class="btn btn-primary btn-sm float-right"
-      @click="login"
+      @click="_login"
       :disabled="account === '' || passwd === ''"
     >
       Login on
@@ -59,6 +59,7 @@ import {
   getCurrentInstance,
   onMounted,
 } from "vue";
+import _ from "lodash";
 import store from "@/store";
 import { request } from "@/service";
 import { useRouter } from "vue-router";
@@ -76,7 +77,7 @@ export default defineComponent({
     const alert = ref(null);
 
     const login = async () => {
-      // console.log(account.value, passwd.value);
+      let info = { msg: "", status: "alert-danger" };
       try {
         let res = await request.get("/login", {
           params: {
@@ -84,47 +85,42 @@ export default defineComponent({
             u_password: passwd.value,
           },
         });
-        // console.log(res);
-        switch (res.data.state) {
+        switch (res.state) {
           case 0:
-            store.commit("setAlertMsg", "该账号未注册");
-            store.commit("setAlertStatus", "alert-warning");
+            info.msg = "该账号未注册";
+            // store.commit("setAlertMsg", "该账号未注册");
+            // store.commit("setAlertStatus", "alert-warning");
             break;
           case 1:
-            store.commit("setAlertMsg", "登录成功");
-            store.commit("setAlertStatus", "alert-success");
-            // CookieUtils.set("u_id", res.data.u_id);
-            // CookieUtils.set("u_nickname", res.data.u_nickname);
-            localStorage.setItem("u_id", res.data.u_id);
-            localStorage.setItem("u_nickname", res.data.u_nickname);
-            // console.log(localStorage.getItem("u_id"));
+            info.msg = "登录成功";
+            info.status = "alert-success";
+            // store.commit("setAlertMsg", "登录成功");
+            // store.commit("setAlertStatus", "alert-success");
+            localStorage.setItem("u_id", res.u_id);
+            localStorage.setItem("u_nickname", res.u_nickname);
             res = await request.get("/selectuseronid", {
-              // params: { u_id: Number.parseInt(CookieUtils.get("u_id")) },
               params: { u_id: Number.parseInt(localStorage.getItem("u_id")) },
             });
-            // CookieUtils.set(
-            //   "img_id",
-            //   res.data.img_id,
-            //   24 * 60 * 60 * 1000,
-            //   "/"
-            // );
-            localStorage.setItem("img_id", res.data.img_id);
+            localStorage.setItem("img_id", res.img_id);
             router.push("/");
             break;
           case 2:
-            store.commit("setAlertMsg", "帐号或密码错误");
-            store.commit("setAlertStatus", "alert-danger");
+            info.msg = "帐号或密码错误";
+            // store.commit("setAlertMsg", "帐号或密码错误");
+            // store.commit("setAlertStatus", "alert-danger");
             break;
           default:
-            store.commit("setAlertMsg", "其他问题");
-            store.commit("setAlertStatus", "alert-danger");
+            info.msg = "其他问题";
+          // store.commit("setAlertMsg", "其他问题");
+          // store.commit("setAlertStatus", "alert-danger");
         }
-        alert.value.alert();
+        alert.value.alert(info);
       } catch (err) {
-        alert.value.alert();
+        alert.value.alert(info);
       }
     };
     const register = () => {
+      let info = { msg: "", status: "alert-danger" };
       request
         .post(
           "/register",
@@ -135,23 +131,34 @@ export default defineComponent({
           })
         )
         .then((res) => {
-          console.log(res);
-          switch (res.data.state) {
+          switch (res.state) {
             case 0:
-              store.commit("setAlertMsg", "该账号已注册");
-              store.commit("setAlertStatus", "alert-warning");
+              info.msg = "该账号已注册";
+              // store.commit("setAlertMsg", "该账号已注册");
+              // store.commit("setAlertStatus", "alert-warning");
               break;
             case 1:
-              store.commit("setAlertMsg", "注册成功");
-              store.commit("setAlertStatus", "alert-success");
+              info.msg = "注册成功";
+              info.status = "success";
+              // store.commit("setAlertMsg", "注册成功");
+              // store.commit("setAlertStatus", "alert-success");
               break;
             default:
-              store.commit("setAlertMsg", "其他问题");
-              store.commit("setAlertStatus", "alert-danger");
+              info.msg = "其他问题";
+            // store.commit("setAlertMsg", "其他问题");
+            // store.commit("setAlertStatus", "alert-danger");
           }
+          alert.value.alert(info);
         });
-      alert.value.alert();
     };
+    const _login = _.debounce(login, store.state.clickDelay, {
+      leading: true,
+      trailing: false,
+    });
+    const _register = _.debounce(register, store.state.clickDelay, {
+      leading: true,
+      trailing: false,
+    });
     const toggle = () => {
       accInput.value.focus();
       mode.value = !mode.value;
@@ -163,18 +170,18 @@ export default defineComponent({
       accInput.value.focus();
     });
 
-    return reactive({
+    return {
       ctx,
       account,
       passwd,
       name,
       accInput,
       mode,
-      login,
-      register,
+      _login,
+      _register,
       toggle,
       alert,
-    });
+    };
   },
 });
 </script>

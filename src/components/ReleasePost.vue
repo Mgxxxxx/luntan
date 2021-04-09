@@ -22,17 +22,19 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive } from "vue";
+import { defineComponent, ref, reactive, getCurrentInstance } from "vue";
 import store from "@/store";
 import { request, uploadImg } from "@/service.js";
 // import RichTextEditor from "@/components/RichTextEditor.vue";
-import { inject } from "vue";
 
 export default defineComponent({
   name: "HelloWorld",
   // components: { RichTextEditor },
   setup() {
-    const bus = inject("bus");
+    // const bus = inject("bus");
+
+    const { parent } = getCurrentInstance();
+    console.log(parent.ctx);
 
     const editor = ref(null);
     let title = ref("");
@@ -43,6 +45,7 @@ export default defineComponent({
 
     const releasePost = () => {
       let id;
+      let info = { msg: "", status: "alert-danger" };
       request
         .post(
           "/createpost",
@@ -56,11 +59,11 @@ export default defineComponent({
         .then((res) => {
           // console.log(res);
           let msg, status;
-          switch (res.data.state) {
+          switch (res.state) {
             case 1:
               msg = "发帖成功";
               status = "alert-success";
-              id = res.data.post_id;
+              id = res.post_id;
               title.value = "";
               content.value = "";
               break;
@@ -68,17 +71,19 @@ export default defineComponent({
               msg = "发帖失败";
               status = "alert-danger";
           }
-          store.commit("setAlertMsg", msg);
-          store.commit("setAlertStatus", status);
-          if (res.data.state === 1) {
+          info.msg = msg;
+          info.status = status;
+          // store.commit("setAlertMsg", msg);
+          // store.commit("setAlertStatus", status);
+          if (res.state === 1) {
             if (store.state.postImage) {
               const data = new FormData();
               data.append("object", "post");
-              data.append("object_id", Number.parseInt(res.data.post_id));
+              data.append("object_id", Number.parseInt(res.post_id));
               data.append("image", store.state.postImage);
               return uploadImg(data);
             } else {
-              return Promise.resolve({ data: { state: 1 } });
+              return Promise.resolve({ state: 1 });
             }
           } else {
             return Promise.reject("发帖失败");
@@ -86,18 +91,22 @@ export default defineComponent({
         })
         .then((res) => {
           // console.log(res);
-          if (res.data.state === 1) {
+          if (res.state === 1) {
             window.URL.revokeObjectURL(store.state.postImage);
             store.commit("setPostImage", null);
-            bus.emit("addPost", id);
+            // bus.emit("addPost", id);
+            parent.ctx?.addPost(id);
             // console.log(store.state.alertStatus);
-            bus.emit("alert");
+            store.commit("alert", info);
+            // bus.emit("alert");
           } else return Promise.reject("帖子添加图片失败");
         })
         .catch((err) => {
-          console.log(err);
-          store.commit("setAlertStatus", err);
-          bus.emit("alert");
+          console.warn(err);
+          info.msg = err;
+          store.commit("alert", info);
+          // store.commit("setAlertStatus", err);
+          // bus.emit("alert");
         });
     };
 
