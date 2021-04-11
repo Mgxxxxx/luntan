@@ -1,12 +1,5 @@
 <template>
-  <Suspense>
-    <template #default>
-      <router-view />
-    </template>
-    <template #fallback>
-      <loading />
-    </template>
-  </Suspense>
+  <router-view />
 </template>
 
 <style lang="scss">

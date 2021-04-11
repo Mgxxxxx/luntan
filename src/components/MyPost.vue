@@ -1,6 +1,5 @@
 <template>
-  <loading v-if="isLoading" />
-  <div v-if="!isLoading" class="card no-border">
+  <div class="card no-border">
     <div class="card-body">
       <div class="d-flex flex-column align-items-start">
         <div class="w-100 clearfix">
@@ -54,7 +53,6 @@ export default defineComponent({
         params: { post_id: Number.parseInt(postId.value) },
       });
       postContent = res;
-      isLoading.value = false;
       postContent["time"] = moment(res.post_time).format("YYYY-MM-DD HH:mm");
       if (postContent.img_id) {
         [res, res1] = await Promise.allSettled([
@@ -74,8 +72,12 @@ export default defineComponent({
         });
         postContent["poster"] = res.u_nickname;
       }
+      isLoading.value = false;
     } catch (error) {
       console.warn(error);
+    } finally {
+      isLoading.value = false;
+      // console.log(postContent);
     }
 
     return {

@@ -32,7 +32,6 @@ export default defineComponent({
   // components: { RichTextEditor },
   setup() {
     const { parent } = getCurrentInstance();
-    console.log(parent.ctx);
 
     const editor = ref(null);
     let title = ref("");

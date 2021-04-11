@@ -5,8 +5,6 @@ import {
 export default createStore({
   state: {
     alert: null,
-    // alertMsg: "",
-    // alertStatus: "",
     postImage: null,
     commentImage: null,
     clickDelay: 1000
@@ -15,12 +13,6 @@ export default createStore({
     setAlert(s, p) {
       s.alert = p;
     },
-    // setAlertMsg(s, msg) {
-    //   s.alertMsg = msg;
-    // },
-    // setAlertStatus(s, status) {
-    //   s.alertStatus = status;
-    // },
     alert(s, payload) {
       s.alert.alert(payload);
     },

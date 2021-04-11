@@ -35,7 +35,11 @@
   </nav>
   <Suspense>
     <template #default>
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <keep-alive include="PostList">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </template>
     <template #fallback>
       <loading />
@@ -44,7 +48,7 @@
 </template>
 <script>
 // @ is an alias to /src
-import { onMounted, reactive, ref, inject } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import ReleasePost from "@/components/ReleasePost.vue";
 import StaticFooter from "@/components/StaticFooter.vue";
 import ScrollToTop from "@/components/ScrollToTop.vue";
@@ -63,7 +67,6 @@ export default {
     Alert,
   },
   setup() {
-    const bus = inject("bus");
     const home = ref(null);
     const alert = ref(null);
     let nickname = ref(localStorage.getItem("u_nickname"));
@@ -77,11 +80,6 @@ export default {
       } else {
         store.commit("setAlert", alert.value);
       }
-    });
-
-    bus.on("alert", () => {
-      // console.log("has listened alert");
-      alert.value && alert.value.alert();
     });
 
     const dropdown = () => {

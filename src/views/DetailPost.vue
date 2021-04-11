@@ -65,7 +65,7 @@
       <button
         type="button"
         class="btn btn-primary btn-sm px-3 float-right"
-        @click="_releaseReply"
+        @click="releaseReply"
         :disabled="replyContent === ''"
       >
         发表
@@ -159,7 +159,7 @@ export default defineComponent({
       document.querySelector(".reply-box").scrollIntoView(false);
     };
 
-    const releaseReply = async () => {
+    const _releaseReply = async () => {
       if (replyContent.value.includes("莫广贤")) {
         window.alert("?????");
         return;
@@ -212,7 +212,7 @@ export default defineComponent({
       }
     };
 
-    const _releaseReply = _.debounce(releaseReply, store.state.clickDelay, {
+    const releaseReply = _.debounce(_releaseReply, store.state.clickDelay, {
       leading: true,
       trailing: false,
     });
@@ -226,7 +226,7 @@ export default defineComponent({
       postImage,
       pictureArea,
       toReply,
-      _releaseReply,
+      releaseReply,
     };
   },
 });

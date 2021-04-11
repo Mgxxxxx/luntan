@@ -33,7 +33,7 @@
       v-if="!mode"
       type="button"
       class="btn btn-primary btn-sm float-right"
-      @click="_register"
+      @click="register"
       :disabled="account === '' || passwd === '' || name === ''"
     >
       Sign up
@@ -42,7 +42,7 @@
       v-else
       type="button"
       class="btn btn-primary btn-sm float-right"
-      @click="_login"
+      @click="login"
       :disabled="account === '' || passwd === ''"
     >
       Login on
@@ -66,7 +66,7 @@ import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "Login",
-  async setup() {
+  setup() {
     const { ctx } = getCurrentInstance();
     const router = useRouter();
     let account = ref(null);
@@ -76,7 +76,7 @@ export default defineComponent({
     const accInput = ref(null);
     const alert = ref(null);
 
-    const login = async () => {
+    const _login = async () => {
       let info = { msg: "", status: "alert-danger" };
       try {
         let res = await request.get("/login", {
@@ -111,7 +111,7 @@ export default defineComponent({
         alert.value.alert(info);
       }
     };
-    const register = () => {
+    const _register = () => {
       let info = { msg: "", status: "alert-danger" };
       request
         .post(
@@ -143,11 +143,11 @@ export default defineComponent({
           alert.value.alert(info);
         });
     };
-    const _login = _.debounce(login, store.state.clickDelay, {
+    const login = _.debounce(_login, store.state.clickDelay, {
       leading: true,
       trailing: false,
     });
-    const _register = _.debounce(register, store.state.clickDelay, {
+    const register = _.debounce(_register, store.state.clickDelay, {
       leading: true,
       trailing: false,
     });
@@ -169,8 +169,8 @@ export default defineComponent({
       name,
       accInput,
       mode,
-      _login,
-      _register,
+      login,
+      register,
       toggle,
       alert,
     };

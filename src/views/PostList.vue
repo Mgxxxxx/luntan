@@ -24,12 +24,9 @@
         </div>
       </div>
     </div>
-    <Suspense>
+    <Suspense v-for="id in activePageIds" :key="id">
       <template #default>
-        <div>
-          <!-- <my-post v-for="id in postIds[activePage]" :key="id" :postId="id" /> -->
-          <my-post v-for="id in activePageIds" :key="id" :postId="id" />
-        </div>
+        <my-post :postId="id" />
       </template>
       <template #fallback>
         <loading />
@@ -83,7 +80,7 @@ import { request } from "@/service";
 import _ from "lodash";
 
 export default {
-  name: "Home",
+  name: "PostList",
   components: {
     ReleasePost,
     MyPost,
@@ -92,7 +89,6 @@ export default {
     PictureArea,
   },
   async setup() {
-    // const bus = inject("bus");
     const home = ref(null);
     let isFocus = ref(true);
     const releasePost = ref(null);
@@ -135,13 +131,10 @@ export default {
       console.log(err);
     }
 
-    let flag = true;
     const togglePage = (page) => {
       if (page >= 0 && page < postIds.value.length) {
-        if (flag) {
-          activePageIds.value = postIds.value[page].reverse();
-        }
         activePage.value = page;
+        activePageIds.value = postIds.value[page];
         nextTick(() => {
           window.scrollTo({
             top: 0,
