@@ -64,30 +64,31 @@
 import { defineComponent, ref, onBeforeUnmount } from "vue";
 import Avatar from "@/components/Avatar.vue";
 import store from "@/store";
-import { request } from "@/service";
+import {
+  getImg,
+  allPostIdsByUid,
+  uploadImg,
+  selectUserById,
+  deletePostById,
+  selectPostById,
+} from "@/service";
 import _ from "lodash";
 
 export default defineComponent({
   name: "Profile",
   components: { Avatar },
   async setup() {
-    // const bus = inject("bus");
     const userName = localStorage.getItem("u_nickname");
     const uid = localStorage.getItem("u_id");
     let postIds = [];
     const allPosts = ref([]);
     const activePage = ref(0);
     const headerImg = ref(null);
-    let imgSrc = "";
+    let imgSrc = getImg(localStorage.getItem("img_id"));
 
     onBeforeUnmount(() => {
       window.URL.revokeObjectURL(imgSrc);
     });
-
-    const getPostId = () =>
-      request.get("allpostidonuid", {
-        params: { u_id: Number.parseInt(uid) },
-      });
 
     const upload = async (file, headerImgUrl) => {
       console.log(file);
@@ -96,13 +97,9 @@ export default defineComponent({
       data.append("object_id", Number.parseInt(localStorage.getItem("u_id")));
       data.append("image", file, file.name);
       try {
-        let res = await request.post("/uploadimg", data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        res = await request.get("/selectuseronid", {
-          params: { u_id: Number.parseInt(localStorage.getItem("u_id")) },
-        });
-        console.log(res);
+        let res = await uploadImg(data);
+        res = await selectUserById(uid);
+        // console.log(res);
         localStorage.setItem("img_id", res.img_id);
       } catch (err) {
         console.log(err);
@@ -113,12 +110,7 @@ export default defineComponent({
     const deletePost = async (id) => {
       let info = { msg: "", status: "alert-danger" };
       try {
-        let res = await request.post(
-          "/deletepostonid",
-          JSON.stringify({
-            post_id: Number.parseInt(id),
-          })
-        );
+        let res = await deletePostById(id);
         // console.log(res);
         if (res.state === 1) {
           info.msg = "删除成功";
@@ -137,15 +129,6 @@ export default defineComponent({
       }
     };
 
-    const getUserHeadImg = async () => {
-      return request({
-        url: "/getimg",
-        method: "get",
-        params: { img_id: localStorage.getItem("img_id") },
-        responseType: "blob",
-      });
-    };
-
     const togglePage = (page) => {
       if (page >= 0 && page < allPosts.value.length) {
         activePage.value = page;
@@ -154,22 +137,11 @@ export default defineComponent({
 
     let numOfEndPost = 0;
 
-    let [res1, res2] = await Promise.all([getPostId(), getUserHeadImg()]);
-    // console.log(res1, res2);
-    if (res2 === undefined) {
-      console.warn("获取用户头像失败");
-      imgSrc = "";
-    } else {
-      imgSrc = window.URL.createObjectURL(res2);
-    }
-    // console.log(res1);
-    postIds =
-      res1.postids === (undefined || null) ? [] : res1.postids.reverse();
+    let res = await allPostIdsByUid(uid);
+    postIds = res.postids === (undefined || null) ? [] : res.postids.reverse();
     // console.log(postIds);
     for (let i = 0; i < postIds.length; i++, numOfEndPost++) {
-      let item = await request.get("selectpostonid", {
-        params: { post_id: Number.parseInt(postIds[i]) },
-      });
+      let item = await selectPostById(postIds[i]);
       allPosts.value.push({ id: postIds[i], ...item });
     }
     allPosts.value = _.chunk(allPosts.value, 10);

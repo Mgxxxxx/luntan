@@ -20,7 +20,7 @@ export default defineComponent({
     let baseAlert = ref(null);
     let alertInfo = ref({
       msg: "no msg",
-      status: "succuess",
+      status: "alert-succuess",
     });
 
     const alert = (info) => {

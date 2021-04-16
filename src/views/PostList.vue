@@ -75,7 +75,7 @@ import StaticFooter from "@/components/StaticFooter.vue";
 import ScrollToTop from "@/components/ScrollToTop.vue";
 import PictureArea from "@/components/PictureArea.vue";
 
-import { request } from "@/service";
+import { allPostIds } from "@/service";
 
 import _ from "lodash";
 
@@ -120,7 +120,7 @@ export default {
     });
 
     try {
-      let res = await request.get("/allpostid");
+      let res = await allPostIds();
       // console.log(res);
       for (let i = res.postids.length - 1; i >= 0; i--) {
         postIds.value.push(res.postids[i]);

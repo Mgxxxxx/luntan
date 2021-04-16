@@ -32,58 +32,33 @@
 
 <script>
 import { defineComponent, toRefs, ref } from "vue";
-import { request, getImg } from "@/service.js";
+import { getImg, selectPostById, selectUserById } from "@/service.js";
 import moment from "moment";
 import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "MyPost",
   props: ["postId"],
-  async setup(props, ctx) {
+  async setup(props) {
     const router = useRouter();
     const { postId } = toRefs(props);
-    // console.log(postId.value);
     let postContent = null;
-    let isLoading = ref(true);
     let postImage = "";
 
     try {
-      let res1;
-      let res = await request.get("/selectpostonid", {
-        params: { post_id: Number.parseInt(postId.value) },
-      });
+      let res = await selectPostById(postId.value);
       postContent = res;
       postContent["time"] = moment(res.post_time).format("YYYY-MM-DD HH:mm");
-      if (postContent.img_id) {
-        [res, res1] = await Promise.allSettled([
-          request.get("/selectuseronid", {
-            params: { u_id: postContent.u_id },
-          }),
-          getImg(postContent.img_id),
-        ]);
-        // console.log(res, res1);
-        postContent["poster"] = res.value.u_nickname;
-        if (res1.value && res1.value) {
-          postImage = window.URL.createObjectURL(res1.value);
-        }
-      } else {
-        res = await request.get("/selectuseronid", {
-          params: { u_id: postContent.u_id },
-        });
-        postContent["poster"] = res.u_nickname;
-      }
-      isLoading.value = false;
+      postImage = postImage = getImg(postContent.img_id);
+      res = await selectUserById(postContent.u_id);
+      postContent["poster"] = res.u_nickname;
     } catch (error) {
       console.warn(error);
-    } finally {
-      isLoading.value = false;
-      // console.log(postContent);
     }
 
     return {
       router,
       postContent,
-      isLoading,
       postImage,
     };
   },

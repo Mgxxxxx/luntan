@@ -1,6 +1,4 @@
 import axios from 'axios';
-// import http from 'http';
-// import https from 'https';
 
 const request = axios.create({
     // baseURL: 'http://47.119.115.208:15656',
@@ -21,24 +19,25 @@ request.interceptors.request.use(config => {
 })
 
 request.interceptors.response.use(res => {
+    //对状态码不为200的进行处理
     if (res.status !== 200) {
-        console.log(res);
+        console.error(res);
     }
+    //直接返回响应的数据
     return res.data;
 }, err => {
     console.log(err);
 })
 
 function getImg(img_id) {
-    if (img_id === "") return Promise.resolve("");
-    return request.get(
-        "/getimg", {
-            params: {
-                img_id
-            },
-            responseType: "blob",
-        }
-    )
+    // if (img_id === "") return Promise.resolve("");
+    // return request.get(
+    //     `/getimg/${img_id}`, {
+    //         responseType: "blob",
+    //     }
+    // )
+    if (img_id === "") return "";
+    return `/api/getimg/${img_id}`;
 }
 
 function uploadImg(data) {
@@ -55,9 +54,99 @@ function delCommentById(id) {
     })
 }
 
+function selectCommentById(id) {
+    return request.get("/selectcommentonid", {
+        params: {
+            comment_id: Number(id)
+        },
+    });
+}
+
+function selectUserById(id) {
+    return request.get("/selectuseronid", {
+        params: {
+            u_id: Number(id)
+        },
+    });
+}
+
+function selectPostById(id) {
+    return request.get("/selectpostonid", {
+        params: {
+            post_id: Number(id)
+        },
+    });
+}
+
+function createPost(u_id, post_name, post_txt, post_txthtml) {
+    return request.post("/createpost", JSON.stringify({
+        u_id,
+        post_name,
+        post_txt,
+        post_txthtml
+    }))
+}
+
+function createComment(post_id, u_id, comment_txt) {
+    post_id = Number(post_id);
+    u_id = Number(u_id);
+    return request.post("createcomment", JSON.stringify({
+        post_id,
+        u_id,
+        comment_txt
+    }))
+}
+
+function allCommentIdsOnPostId(post_id) {
+    post_id = Number(post_id);
+    return request.get("/allcommentidonpostid", {
+        params: {
+            post_id
+        },
+    });
+}
+
+function allPostIds() {
+    return request.get("allpostid");
+}
+
+function allPostIdsByUid(u_id) {
+    u_id = Number(u_id);
+    return request.get("allpostidonuid", {
+        params: {
+            u_id
+        }
+    });
+}
+
+function deletePostById(post_id) {
+    post_id = Number(post_id);
+    return request.post("deletepostonid", JSON.stringify({
+        post_id
+    }))
+}
+
+function login(u_name, u_password) {
+    return request.get("/login", {
+        params: {
+            u_name,
+            u_password
+        }
+    });
+}
+
 export {
-    request,
+    login,
     getImg,
     uploadImg,
-    delCommentById
+    delCommentById,
+    selectCommentById,
+    selectUserById,
+    selectPostById,
+    createPost,
+    createComment,
+    allCommentIdsOnPostId,
+    allPostIds,
+    allPostIdsByUid,
+    deletePostById,
 };

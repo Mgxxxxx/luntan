@@ -71,9 +71,10 @@ export default defineComponent({
     const sureSave = (crop) => {
       // console.log("save");
       isUpdating.value = false;
-      const canvas = crop.getCroppedCanvas({
-        imageSmoothingQuality: "high",
-      });
+      // const canvas = crop.getCroppedCanvas({
+      //   imageSmoothingQuality: "high",
+      // });
+      const canvas = crop.getCroppedCanvas();
       const afterImg = canvas.toDataURL("image/jpeg");
       canvas.toBlob(
         (blob) => {

@@ -3,7 +3,6 @@
     <div class="author float-left">
       <div class="poster-img">
         <img :src="imgSrc" alt="头像" />
-        <!-- <img src="@/assets/4.jpg" alt="头像" /> -->
       </div>
       <div class="poster">
         <a href="javascript:;">{{ commentContent.poster }}</a>
@@ -32,14 +31,8 @@
   </div>
 </template>
 <script>
-import {
-  defineComponent,
-  getCurrentInstance,
-  onBeforeUnmount,
-  ref,
-  toRefs,
-} from "vue";
-import { request, getImg } from "@/service.js";
+import { defineComponent, getCurrentInstance, ref, toRefs } from "vue";
+import { selectCommentById, selectUserById } from "@/service.js";
 import { delComment } from "./Floor/index.js";
 import moment from "moment";
 
@@ -53,45 +46,23 @@ export default defineComponent({
     let imgSrc = "";
     let commentImage = "";
     let canDel;
-    onBeforeUnmount(() => {
-      imgSrc !== "" && window.URL.revokeObjectURL(imgSrc);
-      commentImage !== "" && window.URL.revokeObjectURL(commentImage);
-      localStorage.removeItem(commentContent.u_id + "headimg");
-      // console.log("leave floor");
-    });
 
     try {
-      let res = await request.get("/selectcommentonid", {
-        params: { comment_id: Number.parseInt(commentId.value) },
-      });
+      let res = await selectCommentById(commentId.value);
       commentContent = res;
+      if (commentContent.img_id !== "") {
+        commentImage = `/api/getimg/${commentContent.img_id}`;
+      }
       canDel =
         Number.parseInt(localStorage.getItem("u_id")) === commentContent.u_id;
       commentContent["time"] = moment(res.comment_time).format(
         "YYYY-MM-DD HH:mm"
       );
-      imgSrc = localStorage.getItem(commentContent.u_id + "headimg") ?? "";
-      let res1;
-      [res, res1] = await Promise.allSettled([
-        request.get("/selectuseronid", {
-          params: { u_id: commentContent.u_id },
-        }),
-        getImg(commentContent.img_id),
-      ]);
-      if (res1.value?.data) {
-        commentImage = window.URL.createObjectURL(res1.value);
-      }
-      commentContent["poster"] = res.value?.u_nickname ?? "老色皮";
-      if (imgSrc === "") {
-        let commenterId = res.value.u_id;
-        res = await getImg(res.value.img_id);
-        if (res) {
-          imgSrc = window.URL.createObjectURL(res);
-          localStorage.setItem(commenterId + "headimg", imgSrc);
-        } else imgSrc = "";
-      }
+      res = await selectUserById(commentContent.u_id);
+      commentContent["poster"] = res.u_nickname ?? "老色皮";
+      imgSrc = `/api/getimg/${res.img_id}`;
     } catch (error) {
-      console.log(error);
+      console.warn(error);
     }
 
     return {

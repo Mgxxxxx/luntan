@@ -33,7 +33,12 @@ export default defineComponent({
 
     const upload = (e) => {
       console.log(e.target.files);
+      if (e.target.files[0].size > 200 * 1024) {
+        alert("you can not!");
+        return;
+      }
       imgSrc.value = window.URL.createObjectURL(e.target.files[0]);
+      window.URL.revokeObjectURL(e.target.files[0]);
       let commitFn = "";
       switch (type.value) {
         case "post":

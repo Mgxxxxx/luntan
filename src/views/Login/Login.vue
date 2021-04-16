@@ -15,7 +15,7 @@
         class="form-control"
         placeholder="Password"
         v-model="passwd"
-        @keyup.enter="_login"
+        @keyup.enter="login"
       />
     </div>
     <div class="form-group" v-show="!mode">
@@ -52,16 +52,10 @@
 </template>
 
 <script>
-import {
-  defineComponent,
-  ref,
-  reactive,
-  getCurrentInstance,
-  onMounted,
-} from "vue";
+import { defineComponent, ref, getCurrentInstance, onMounted } from "vue";
 import _ from "lodash";
 import store from "@/store";
-import { request } from "@/service";
+import { login as baseLogin, selectUserById } from "@/service";
 import { useRouter } from "vue-router";
 
 export default defineComponent({
@@ -72,32 +66,32 @@ export default defineComponent({
     let account = ref(null);
     let passwd = ref("");
     let name = ref("");
-    let mode = ref(true);
-    const accInput = ref(null);
-    const alert = ref(null);
+    let mode = ref(true); //当前页面的模式：true->登录、false->注册
+    const accInput = ref(null); //帐号框元素
+    const alert = ref(null); //警告弹窗组件
 
+    //登录功能
     const _login = async () => {
       let info = { msg: "", status: "alert-danger" };
       try {
-        let res = await request.get("/login", {
-          params: {
-            u_name: account.value,
-            u_password: passwd.value,
-          },
-        });
-        switch (res.state) {
+        let res = await baseLogin(account.value, passwd.value);
+        // console.log(res);
+        switch (
+          res.state //根据返回的状态设置警告弹窗的信息
+        ) {
           case 0:
             info.msg = "该账号未注册";
             break;
           case 1:
             info.msg = "登录成功";
             info.status = "alert-success";
+            //在localStorage中保存用户的信息
             localStorage.setItem("u_id", res.u_id);
             localStorage.setItem("u_nickname", res.u_nickname);
-            res = await request.get("/selectuseronid", {
-              params: { u_id: Number.parseInt(localStorage.getItem("u_id")) },
-            });
+            //登录成功后获取用户的信息
+            res = await selectUserById(localStorage.getItem("u_id"));
             localStorage.setItem("img_id", res.img_id);
+            //登录成功后跳转到首页
             router.push("/");
             break;
           case 2:
@@ -111,6 +105,7 @@ export default defineComponent({
         alert.value.alert(info);
       }
     };
+    //注册功能
     const _register = () => {
       let info = { msg: "", status: "alert-danger" };
       request
@@ -123,17 +118,14 @@ export default defineComponent({
           })
         )
         .then((res) => {
+          //根据返回的状态设置警告弹窗的信息
           switch (res.state) {
             case 0:
               info.msg = "该账号已注册";
-              // store.commit("setAlertMsg", "该账号已注册");
-              // store.commit("setAlertStatus", "alert-warning");
               break;
             case 1:
               info.msg = "注册成功";
-              info.status = "success";
-              // store.commit("setAlertMsg", "注册成功");
-              // store.commit("setAlertStatus", "alert-success");
+              info.status = "alert-success";
               break;
             default:
               info.msg = "其他问题";
@@ -143,6 +135,7 @@ export default defineComponent({
           alert.value.alert(info);
         });
     };
+    //对login和register进行防抖处理
     const login = _.debounce(_login, store.state.clickDelay, {
       leading: true,
       trailing: false,
@@ -151,8 +144,10 @@ export default defineComponent({
       leading: true,
       trailing: false,
     });
+
     const toggle = () => {
-      accInput.value.focus();
+      //登录页面和注册页面切换
+      accInput.value.focus(); //自动聚焦到帐号框
       mode.value = !mode.value;
       account.value = "";
       passwd.value = "";

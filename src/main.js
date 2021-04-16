@@ -28,3 +28,13 @@ app.directive('focus', {
 })
 
 app.mount("#app");
+
+window.addEventListener("unload", () => {
+  let key;
+  for (let i = 0; i < localStorage.length; i++) {
+    key = localStorage.key(i);
+    if (/headimg/.test(key)) {
+      localStorage.removeItem(key);
+    }
+  }
+})

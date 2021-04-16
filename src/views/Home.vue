@@ -74,6 +74,7 @@ export default {
     const router = useRouter();
 
     onMounted(() => {
+      //进入主页面前检查用户是否已经登陆过
       if (!localStorage.getItem("u_id")) {
         router.push("/login");
         return;
@@ -86,6 +87,7 @@ export default {
       $(".dropdown-toggle").dropdown();
     };
 
+    //登出功能
     const logout = () => {
       localStorage.removeItem("u_id");
       localStorage.removeItem("u_nickname");

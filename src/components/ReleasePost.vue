@@ -24,7 +24,7 @@
 <script>
 import { defineComponent, ref, reactive, getCurrentInstance } from "vue";
 import store from "@/store";
-import { request, uploadImg } from "@/service.js";
+import { uploadImg, createPost } from "@/service.js";
 // import RichTextEditor from "@/components/RichTextEditor.vue";
 
 export default defineComponent({
@@ -43,16 +43,7 @@ export default defineComponent({
     const releasePost = () => {
       let id;
       let info = { msg: "", status: "alert-danger" };
-      request
-        .post(
-          "/createpost",
-          JSON.stringify({
-            u_id: uid,
-            post_name: title.value,
-            post_txt: content.value,
-            post_txthtml: content.value,
-          })
-        )
+      createPost(uid, title.value, content.value, content.value)
         .then((res) => {
           // console.log(res);
           let msg, status;

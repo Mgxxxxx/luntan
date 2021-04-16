@@ -41,11 +41,9 @@
         </div>
       </div>
     </div>
-    <Suspense>
+    <Suspense v-for="(id, i) in commentIds" :key="id + i">
       <template #default>
-        <div>
-          <floor v-for="(id, i) in commentIds" :key="id + i" :commentId="id" />
-        </div>
+        <floor :commentId="id" />
       </template>
       <template #fallback>
         <loading />
@@ -83,7 +81,14 @@ import store from "@/store";
 
 import { useRoute } from "vue-router";
 
-import { request, getImg, uploadImg } from "@/service";
+import {
+  uploadImg,
+  getImg,
+  selectPostById,
+  createComment,
+  selectUserById,
+  allCommentIdsOnPostId,
+} from "@/service";
 import moment from "moment";
 import _ from "lodash";
 
@@ -114,44 +119,20 @@ export default defineComponent({
     });
 
     try {
-      let res = await request.get("/selectpostonid", {
-        params: { post_id: route.params.id },
-      });
+      let res = await selectPostById(route.params.id);
       postContent = res;
       postContent["time"] = moment(res.post_time).format("YYYY-MM-DD HH:mm");
-      res = await request.get("/selectuseronid", {
-        params: { u_id: postContent.u_id },
-      });
+      res = await selectUserById(postContent.u_id);
       postContent["poster"] = res.u_nickname;
       postContent["user_img_id"] = res.img_id;
-      let res1, res2;
-      [res, res1, res2] = await Promise.allSettled([
-        request.get("/allcommentidonpostid", {
-          params: { post_id: Number.parseInt(route.params.id) },
-        }),
-        getImg(postContent.user_img_id),
-        postContent.img_id !== ""
-          ? getImg(postContent.img_id)
-          : Promise.resolve(),
-      ]);
-      if (res1?.value === undefined) {
-        console.warn("获取用户头像失败");
-        imgSrc = "";
-      } else if (res1.value) {
-        imgSrc = window.URL.createObjectURL(res1.value);
-        localStorage.setItem(postContent.u_id + "headimg", imgSrc);
-      }
-      if (postContent.img_id !== "" && res2?.value === undefined) {
-        console.warn("获取帖子图片失败");
-        postImage = "";
-      } else if (res2.value) {
-        postImage = window.URL.createObjectURL(res2.value);
-      }
-      if (res.value.commentids !== null) {
-        commentIds.value = res.value.commentids;
+      imgSrc = getImg(postContent.user_img_id);
+      postImage = getImg(postContent.img_id);
+      res = await allCommentIdsOnPostId(route.params.id);
+      if (res.commentids !== null) {
+        commentIds.value = res.commentids;
       }
     } catch (error) {
-      console.log(error);
+      console.warn(error);
     }
 
     const toReply = () => {
@@ -166,35 +147,30 @@ export default defineComponent({
       }
       let msg, status;
       try {
-        let res = await request.post(
-          "/createcomment",
-          JSON.stringify({
-            post_id: Number.parseInt(route.params.id),
-            u_id: Number.parseInt(localStorage.getItem("u_id")),
-            comment_txt: replyContent.value,
-          })
+        let res = await createComment(
+          route.params.id,
+          localStorage.getItem("u_id"),
+          replyContent.value
         );
-        let commentId = -1;
         switch (res.state) {
           case 1:
-            msg = "发帖成功";
+            msg = "评论成功";
             status = "alert-success";
             commentId = res.comment_id;
             replyContent.value = "";
             break;
           default:
-            msg = "发帖失败";
+            msg = "评论失败";
             status = "alert-danger";
         }
         if (res.state === 1) {
           if (store.state.commentImage) {
-            // console.log("upload commentImage");
             const data = new FormData();
             data.append("object", "comment");
             data.append("object_id", Number.parseInt(commentId));
             data.append("image", store.state.commentImage);
             res = await uploadImg(data);
-            if (res.state === 1) {
+            if (res?.state === 1) {
               window.URL.revokeObjectURL(store.state.commentImage);
               store.commit("setCommentImage", null);
               pictureArea.value.imgSrc = "";
